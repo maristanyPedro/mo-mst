@@ -1,9 +1,9 @@
-cff-version: 1.2.0
+cff-version: 1.1.0
 message: "If you use this software, please cite it as below."
 authors:
-  - family-names: Maristany de las Casas
-    given-names: Pedro
-    orcid: https://orcid.org/0000-0002-4197-0893
-title: maristanyPedro/mo-mst: Release for Preprint Citation
+ - family-names: "Maristany de las Casas"
+   given-names: "Pedro"
+   orcid: "https://orcid.org/0000-0002-4197-0893"
+title: "IG-MDA and BN Algo - Release for Preprint Citation"
 version: v1.0.0-beta
 date-released: 2023-04-18
