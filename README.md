@@ -49,3 +49,16 @@ e 0 1 57 70 33
 The first line indicates that we are considering a mo-mst instance with a graph that has 9 nodes and 33 edges. The edge cost dimension is 3. Moreover, the file just considers 1 instance (this number is actually ignored).
 
 The second line is the first line specifying an edge (e ...) in the input graph. In this case the edge connects node 0 with node 1 and the three dimensional edge costs are (57, 70, 33). In this example, the program expects further 32 edge lines to follow the line that we just explained. See the file in code/exampleInstances/ to see two complete instances taken from https://doi.org/10.1016/j.cor.2018.05.007
+
+## Running evaluation scripts for results from ...
+
+The results from the computational experiments presented in the paper are in the folder results/ .
+
+### Santos et al. instances
+
+For the MO-MST instances from https://doi.org/10.1016/j.cor.2018.05.007 please use the file evaluateSantos.py . In lines 73-75 you can choose the results that the script is supposed to consider. The lines are self-explanatory and the names of the result files in the result/ chosen accordingly. For example, in the current version of the evaluation script, the script will generate the contents for Table 3 in our paper. 
+
+
+### Fernandes et al. instances
+
+For the MO-MST instances from https://doi.org/10.1007/s10589-019-00154-1 please use the file evaluataIslamlifelipe.py . In lines 47-50 you can choose the results that the script is supposed to consider. The lines are self-explanatory and the names of the result files in the result/ chosen accordingly. For example, in the current version of the evaluation script, the script will generate the contents for Table 12 in our paper. 
