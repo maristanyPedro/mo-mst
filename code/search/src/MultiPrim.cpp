@@ -122,14 +122,10 @@ Solution IGMDA::run() {
     }
     auto end = std::chrono::high_resolution_clock::now();
     //for(k=0;k<originalGraph->nodos;k++)
-    printf("Memory pool allocated %lu elements!\n", treesPool.size());
-    printf("Every element needs %lu memory\n", sizeof(SubTree));
     Solution solution;
     std::chrono::duration<double> duration = end - start;
     solution.time = duration.count();
     storeStatistics(solution, solutions);
-    //printf("The search initialized %lu out of %lu implicit nodes!\n", this->transitionNodes.size(), this->targetNode+1);
-    printf("Skipped: %lu\n", skipCounter);
     //this->printSpanningTrees(solutions);
 //    for (const SubTree* tree : solutions) {
 //        printf("SOL;%u;%u;%u\n", tree->c[0], tree->c[1], tree->c[2]);

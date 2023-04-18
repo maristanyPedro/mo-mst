@@ -1,5 +1,5 @@
 #define BN_ALGO
-//#define IG_MDA
+#define IG_MDA
 
 #include <chrono>
 #include <ctime>
@@ -37,18 +37,15 @@ int main(int argc, char *argv[]) {
 
     Preprocessor preprocessor;
     GraphCompacter contractedGraph = preprocessor.run(G);
-    printf("ContractedGraph size: %u %u\n", contractedGraph.compactGraph.nodesCount, contractedGraph.compactGraph.arcsCount);
-
 
 #ifdef IG_MDA
     NEW_GENERATION::IGMDA biSearch(contractedGraph.compactGraph);
     std::clock_t c_start = std::clock();
     Solution solution = biSearch.run();
     std::clock_t c_end = std::clock();
-    std::cout << std::fixed << "CPU time used: " << (1000* (c_end - c_start) / CLOCKS_PER_SEC)/1000. << " s\n" << std::endl;
     std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     char resultsBuffer [350];
-    sprintf(resultsBuffer, "MultiPrim;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
+    sprintf(resultsBuffer, "IG-MDA;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
             DIM, graphName.c_str(), G.nodesCount, G.arcsCount,
             contractedGraph.blueArcs, contractedGraph.redArcs,
             preprocessor.duration, solution.time, (1000* (c_end - c_start) / CLOCKS_PER_SEC)/1000.,

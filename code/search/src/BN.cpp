@@ -204,8 +204,6 @@ Solution MultiobjectiveSearch::run() {
     storeStatistics(solution, targetFront.size());
     std::chrono::duration<double> duration = end - start;
     solution.time = duration.count();
-    printf("Memory pool allocated %lu elements!\n", this->treePool.size());
-    printf("Every element needs %lu memory\n", sizeof(BN::QueueTree));
 //    printf("The search initialized %lu out of %lu implicit nodes!\n", this->transitionNodes.size(), this->targetNode+1);
     //this->printSpanningTrees();
     //PrintTree(targetNode, solution.trees, permanentTrees);
