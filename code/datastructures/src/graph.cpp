@@ -58,7 +58,7 @@ unique_ptr<Graph> setupGraph(const string& filename) {
             for (size_t i = 0; i < dimension; ++i) {
                 arcCosts[i] = stoi(splittedLine[3+i]);
             }
-            edges.emplace_back(addedEdges, tailId, headId, arcCosts);
+            edges.emplace_back(INVALID_ARC, tailId, headId, arcCosts);
             ++addedEdges;
         }
     }
@@ -73,6 +73,8 @@ unique_ptr<Graph> setupGraph(const string& filename) {
     //printf("Added %lu edges. Want to build graph now!\n", edges.size());
     for (size_t aId = 0; aId < G->edges.size(); ++aId) {
         Edge& doubleEndedArc{G->edges[aId]};
+        assert(doubleEndedArc.id == INVALID_ARC);
+        doubleEndedArc.id = aId;
 
         NodeAdjacency& tail = G->node(doubleEndedArc.tail);
         NodeAdjacency& head = G->node(doubleEndedArc.head);
@@ -171,6 +173,13 @@ bool Graph::reachable(Node start, Node target, const boost::dynamic_bitset<>& fo
         }
     }
     return false;
+}
+
+void Edge::print() const {
+    printf("\t\tEdge [%u, %u] with id: %u.\t", this->tail, this->head, this->id);
+    printf("Costs: ");
+    printCosts(this->c);
+    printf("\n");
 }
 
 

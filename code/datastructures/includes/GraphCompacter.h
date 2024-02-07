@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <set>
+#include <map>
 #include <vector>
 
 #include "graph.h"

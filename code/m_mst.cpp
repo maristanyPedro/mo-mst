@@ -11,7 +11,7 @@
 #include "search/includes/MultiPrim.h"
 #include "search/includes/BN.h"
 
-#include "valgrind/callgrind.h"
+//#include "valgrind/callgrind.h"
 #include <boost/asio/ip/host_name.hpp>
 
 int main(int argc, char *argv[]) {

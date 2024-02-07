@@ -108,7 +108,7 @@ Solution IGMDA::run(const GraphCompacter& compactGraph) {
         truncatedInsertion(truncated[currentNode], minTree->c);
         nextQueueTree(minTree, heap, treesPool);
         if (currentNode == targetNode) {
-//            printf("SOL: %u %u %u\n", minTree->c[0], minTree->c[1], minTree->c[2]);
+            //printf("SOL: %u %u %u\n", minTree->c[0], minTree->c[1], minTree->c[2]);
             solutions.push_back(minTree);
             ++solutionsCount;
             continue;
@@ -116,7 +116,7 @@ Solution IGMDA::run(const GraphCompacter& compactGraph) {
 
         bool success = propagate(minTree, searchNode, heap, treesPool);
         if (success) {
-            permanentTrees.addElement(minTree->predLabelPosition, minTree->lastTransitionArc);
+            permanentTrees.addElement(minTree->predLabelPosition, minTree->lastEdgeId);
         }
         treesPool.free(minTree);
     }
@@ -125,7 +125,7 @@ Solution IGMDA::run(const GraphCompacter& compactGraph) {
     std::chrono::duration<double> duration = end - start;
     solution.time = duration.count();
     storeStatistics(solution, solutions);
-    this->printSpanningTrees(solutions, this->permanentTrees, this->graph, compactGraph);
+    //this->printSpanningTrees(solutions, this->permanentTrees, this->graph, compactGraph);
 //    for (const SubTree* tree : solutions) {
 //        printf("SOL;%u;%u;%u\n", tree->c[0], tree->c[1], tree->c[2]);
 //    }
@@ -216,6 +216,7 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
         }
         ArcId aId = outgoingArcInfo.edgeId;
         const Edge& edge{this->graph.edges[aId]};
+        assert(aId == edge.id);
         //printf("\t\tAnalyzing outgoing edge %u --> %u c = (%u,%u,%u) id: %u\n", edge.tail, edge.head, edge.c[0], edge.c[1], edge.c[2], aId);
         assert(!searchNode.getNodes()[edge.tail] || !searchNode.getNodes()[edge.head]);
         Node newTreeNode = searchNode.getNodes()[edge.tail] ? edge.head : edge.tail;
@@ -237,7 +238,7 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
         SubTree* queueTree = getQueueTree(successorNode, treesPool);
         if (queueTree->inQueue) {
             SubTree* newLabel = treesPool.newItem();
-            newLabel->update(successorNode.getIndex(), costCandidate, outgoingArcInfo.incomingArcId, predIndex);
+            newLabel->update(successorNode.getIndex(), costCandidate, outgoingArcInfo.incomingArcId, edge.id, predIndex);
             if (lexSmaller(costCandidate, queueTree->c)) {
                 if (truncatedDominance(this->truncated[successorNode.getIndex()], costCandidate)) {
                     continue;
@@ -273,7 +274,7 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
 //                continue;
 //            }
             success = true;
-            queueTree->update(successorNode.getIndex(), costCandidate, outgoingArcInfo.incomingArcId, predIndex);
+            queueTree->update(successorNode.getIndex(), costCandidate, outgoingArcInfo.incomingArcId, edge.id, predIndex);
 //            printf("\t\t\t\tNo queue tree and is %u %u %u, I'm queue!\n",
 //                   queueTree->c[0], queueTree->c[1], queueTree->c[2]);
             assert(queueTree->n == successorNode.getIndex());
@@ -296,27 +297,27 @@ void IGMDA::storeStatistics(Solution &sol, std::list<SubTree*>& solutions) const
 }
 
 void IGMDA::printSpanningTrees(const std::list<SubTree*>& solutions, const Permanents& permanents, const Graph& G, const GraphCompacter& compactGraph) {
+    size_t treeCount{0};
     for (const SubTree* tree : solutions) {
         size_t printedEdges{0};
         CostArray treeCosts{generate(0)};
         addInPlace(treeCosts, tree->c);
         addInPlace(treeCosts, compactGraph.connectedComponentsCost);
-        printf("New tree with costs %u %u %u\n", treeCosts[0], treeCosts[1], treeCosts[2]);
+        printf("%lu: Tree with costs: ", treeCount);
+        printCosts(treeCosts);
+        printf("\n");
+        ++treeCount;
         PermanentTree const * pred = &permanents.getElement(tree->predLabelPosition);
-        Edge const * preimageOfPredArc{&G.edges[tree->lastTransitionArc]};
+        Edge const * preimageOfPredArc{&G.edges[tree->lastEdgeId]};
         const Edge& edgeInOriginalGraph = compactGraph.originalGraph.edges[compactGraph.getOriginalId(*preimageOfPredArc)];
-        printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", edgeInOriginalGraph.tail, edgeInOriginalGraph.head, edgeInOriginalGraph.c[0],  edgeInOriginalGraph.c[1],  edgeInOriginalGraph.c[2]);
+        edgeInOriginalGraph.print();
         ++printedEdges;
         CostArray currentCosts = substract(tree->c, preimageOfPredArc->c);
         while (printedEdges < G.nodesCount-1) {
-//            printf("\t\t%u %u %u after edge [%u,%u].\n",
-//                   currentCosts[0], currentCosts[1], currentCosts[2],
-//                   preimageOfPredArc->tail, preimageOfPredArc->head);
-//            std::cout << "\t\tNodes: " << this->transitionNodes.at(pred->predSubset)->getNodes() << std::endl;
-            //currentCosts = substract(currentCosts, preimageOfPredArc->c);
             preimageOfPredArc = &G.edges[pred->lastArc];
             const Edge& edgeInOriginalGraph = compactGraph.originalGraph.edges[compactGraph.getOriginalId(*preimageOfPredArc)];
-            printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", edgeInOriginalGraph.tail, edgeInOriginalGraph.head, edgeInOriginalGraph.c[0],  edgeInOriginalGraph.c[1],  edgeInOriginalGraph.c[2]);
+            edgeInOriginalGraph.print();
+            //printf("\t\t\tEdge: [%u, %u] with c = (%u, %u, %u)\n", preimageOfPredArc->tail, preimageOfPredArc->head, preimageOfPredArc->c[0],  preimageOfPredArc->c[1],  preimageOfPredArc->c[2]);
             ++printedEdges;
             currentCosts = substract(currentCosts, preimageOfPredArc->c);
             pred = &permanents.getElement(pred->predLabelPosition);
@@ -325,10 +326,13 @@ void IGMDA::printSpanningTrees(const std::list<SubTree*>& solutions, const Perma
                 break;
             }
         }
+        for (Dimension d = 0; d < DIM; d++) {
+            assert(currentCosts[d] == 0);
+        }
         for (const auto& connectedComponent: *compactGraph.connectedComponents) {
             for (ArcId edgeId : connectedComponent.edgeIds) {
                 const Edge& edgeInOriginalGraph{compactGraph.originalGraph.edges[edgeId]};
-                printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", edgeInOriginalGraph.tail, edgeInOriginalGraph.head, edgeInOriginalGraph.c[0],  edgeInOriginalGraph.c[1],  edgeInOriginalGraph.c[2]);
+                edgeInOriginalGraph.print();
                 ++printedEdges;
             }
         }

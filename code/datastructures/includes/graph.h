@@ -44,12 +44,15 @@ struct Edge {
         this->tail = other.tail;
         this->head = other.head;
         this->c = other.c;
+        this->id = other.id;
         this->isRed = other.isRed;
         this->isBlue = other.isBlue;
         return *this;
     }
 
-    const ArcId id;
+    void print() const;
+
+    ArcId id;
     Node tail{INVALID_NODE};
     Node head{INVALID_NODE};
 

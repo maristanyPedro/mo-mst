@@ -59,7 +59,6 @@ void GraphCompacter::buildCompactGraph() {
         this->compactGraph.edges.emplace_back(addedEdges, tailInNewGraph, headInNewGraph, edge.c);
         this->compactEdgeIds2OriginalEdgeIds.emplace(addedEdges, edge.id);
         ++addedEdges;
-        //TODO: add the new edge to the adjacency lists of the connectedComponents!
         this->compactGraph.node(tailInNewGraph).adjacentArcs.emplace_back(headInNewGraph, edge.c, this->compactGraph.edges.size() - 1);
         this->compactGraph.node(headInNewGraph).adjacentArcs.emplace_back(tailInNewGraph, edge.c, this->compactGraph.edges.size() - 1);
         this->compactGraph.arcsCount++;

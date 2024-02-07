@@ -50,6 +50,12 @@ inline CostArray generate(CostType value) {
     return c;
 }
 
+inline void printCosts(const CostArray& c) {
+    for (Dimension i = 0; i < DIM; ++i) {
+        printf("%u ", c[i]);
+    }
+}
+
 typedef Info<Dimension> DimensionsVector;
 
 inline DimensionsVector standardSorting() {
