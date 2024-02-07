@@ -167,7 +167,7 @@ void Preprocessor::computeLowerBounds(const Graph& G) {
     //fill dimOrderings vector from 0 to dimOrdering.size()-1.
     Info<bool> processedMainDimensions;
     std::fill(processedMainDimensions.begin(), processedMainDimensions.end(), false);
-    std::vector<Edge> arcsCopy = G.arcs;
+    std::vector<Edge> arcsCopy = G.edges;
     do {
         //Avoid multiple lex. searches with the same first optimization criterion.
         if (!processedMainDimensions[dimOrdering[0]]) {

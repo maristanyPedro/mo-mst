@@ -18,7 +18,7 @@ public:
      * @param nodes Passing by value is ok since we are moving the bitset into the 'containedNodes' member.
      */
     ImplicitNodeBN(boost::dynamic_bitset<> nodes, long unsigned index);
-    //ImplicitNode(const Graph& originalGraph, const ImplicitNode& predSubset, Node newNode);
+    //ImplicitNode(const Graph& graph, const ImplicitNode& predSubset, Node newNode);
 
     ImplicitNodeBN(const Graph &originalGraph, Node initialNode);
 
@@ -55,7 +55,7 @@ ImplicitNodeBN<LabelType>::ImplicitNodeBN(boost::dynamic_bitset<> nodes, long un
         cardinality{this->containedNodes.count()} {
     //std::cout << "Constructor for growing tree: " << containedNodes << std::endl;
 //    for (ArcId aId : this->outgoingArcs()) {
-//        const Edge& arc = originalGraph.arcs[aId];
+//        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
 //    std::cout << "Index: " << this->getIndex() << std::endl;
@@ -68,7 +68,7 @@ ImplicitNodeBN<LabelType>::ImplicitNodeBN(const Graph &originalGraph, Node initi
         cardinality{1} {
 //    std::cout << "Constructor for initial node: " << containedNodes << std::endl;
 //    for (ArcId aId : this->outgoingArcs()) {
-//        const Edge& arc = originalGraph.arcs[aId];
+//        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
 //    std::cout << "Index: " << this->getIndex() << std::endl;

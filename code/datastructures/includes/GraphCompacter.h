@@ -13,14 +13,18 @@ public:
 
     CostArray getBlueComponentsCosts() const;
 
+    ArcId getOriginalId(const Edge& edgeinCompactGraph) const;
+
 public:
     Graph compactGraph;
     const Graph& originalGraph;
     std::unique_ptr<ConnectedComponents> connectedComponents;
+    CostArray connectedComponentsCost;
     std::vector<Node> node2connectedComponent;
     const size_t redArcs;
     const size_t blueArcs;
     std::vector<bool> edgeProcessed;
+    std::map<ArcId, ArcId> compactEdgeIds2OriginalEdgeIds;
 
 private:
     void generateNodes2ComponentsLinks();

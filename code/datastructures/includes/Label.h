@@ -18,7 +18,7 @@ struct SubTree{
 
     inline void initialize(Node newNode) {
         predLabelPosition = std::numeric_limits<size_t>::max();
-        lastArc = std::numeric_limits<uint32_t>::max();
+        lastTransitionArc = std::numeric_limits<uint32_t>::max();
         n = newNode;
 //        this->knownTargetElements = 0;
         this->nclChecked = false;
@@ -28,19 +28,19 @@ struct SubTree{
     }
 
     inline void update(Node nNew, const CostArray& cNew, ArcId la, size_t plp) {
-        this->n = nNew; this->c = cNew; this->lastArc = la;
+        this->n = nNew; this->c = cNew; this->lastTransitionArc = la;
         this->predLabelPosition = plp;
 //        this->knownTargetElements = kTe;
         this->nclChecked = false;
     }
 
     void print() const {
-        printf("%lu c=(%u, %u) lastArc=%d\n", n, c[0], c[1], lastArc);
+        printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastTransitionArc);
     }
 
     CostArray c{generate(MAX_COST)};
     size_t predLabelPosition{std::numeric_limits<size_t>::max()};
-    ArcId lastArc{std::numeric_limits<uint32_t>::max()};
+    ArcId lastTransitionArc{std::numeric_limits<uint32_t>::max()};
     long unsigned n{INVALID_NODE};
     uint32_t priority{std::numeric_limits<uint32_t>::max()}; ///< for heap operations.
     SubTree* next{nullptr};
@@ -130,7 +130,7 @@ namespace BN {
                 c{c}, n{n} {}
 
         void print() const {
-            printf("%lu c=(%u, %u) lastArc=%d\n", n, c[0], c[1], lastArc);
+            printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastArc);
         }
 
         CostArray c{generate(MAX_COST)};

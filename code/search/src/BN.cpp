@@ -23,9 +23,9 @@ inline static boost::dynamic_bitset<> addNode(const boost::dynamic_bitset<>& exi
 
 MultiobjectiveSearch::MultiobjectiveSearch(const Graph &G):
     G{G},
-    //permanentTrees((1<<(this->originalGraph.nodesCount-1))),
-    //queueTrees((1<<(this->originalGraph.nodesCount-1))),
-    //lastD2((1<<(this->originalGraph.nodesCount-1)), MAX_COST),
+    //permanentTrees((1<<(this->graph.nodesCount-1))),
+    //queueTrees((1<<(this->graph.nodesCount-1))),
+    //lastD2((1<<(this->graph.nodesCount-1)), MAX_COST),
     implicitNodes((1UL<<(this->G.nodesCount - 1))),
     permanentTrees((1UL<<(this->G.nodesCount - 1))),
     dominanceBound(generate(MAX_COST)),
@@ -199,7 +199,7 @@ Solution MultiobjectiveSearch::run() {
         this->treePool.free(recentlyExtracted);
     }
     auto end = std::chrono::high_resolution_clock::now();
-    //for(k=0;k<originalGraph->nodos;k++)
+    //for(k=0;k<graph->nodos;k++)
     Solution solution;
     storeStatistics(solution, targetFront.size());
     std::chrono::duration<double> duration = end - start;
@@ -327,7 +327,7 @@ void MultiobjectiveSearch::printSpanningTrees(const std::list<QueueTree*>& spann
         CostArray solutionCosts = {tree->c[0], tree->c[1]};
         unsigned long predNodeSet = tree->predSubset;
         size_t predLabelPos = tree->predLabelPosition;
-        const Edge& lastAddedArc{G.arcs[tree->lastArc]};
+        const Edge& lastAddedArc{G.edges[tree->lastArc]};
         printf("\t%u -- %u, c = (%u, %u), n = %lu\n",
                lastAddedArc.tail, lastAddedArc.head,
                tree->c[0], tree->c[1], tree->n);
@@ -336,7 +336,7 @@ void MultiobjectiveSearch::printSpanningTrees(const std::list<QueueTree*>& spann
 //        while (predLabelPos != std::numeric_limits<size_t>::max()) {
         while (predNodeSet != 0) {
             const PermanentQueueTree& subTree{permanentTrees.at(predNodeSet)[predLabelPos]};
-            const Edge& lastAddedArc{G.arcs[subTree.lastArc]};
+            const Edge& lastAddedArc{G.edges[subTree.lastArc]};
             printf("\t%u -- %u\n",
                    lastAddedArc.tail, lastAddedArc.head);
             solutionCosts[0] -= lastAddedArc.c[0];

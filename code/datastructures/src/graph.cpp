@@ -15,7 +15,7 @@ unique_ptr<Graph> setupGraph(const string& filename) {
     string line;
     size_t nodesCount =0, arcsCount = 0;
     Dimension dimension{0};
-    //Parse file until information about number of nodes and number of arcs is reached.
+    //Parse file until information about number of nodes and number of edges is reached.
     while (getline(infile, line)) {
         vector<string> splittedLine{split(line, ' ')};
         if (splittedLine[0] == "mmst") {
@@ -37,8 +37,8 @@ unique_ptr<Graph> setupGraph(const string& filename) {
     }
     std::vector<NeighborhoodSize> degree(nodesCount, 0);
     std::vector<bool> foundNodes(nodesCount, false);
-    std::vector<Edge> arcs;
-    size_t addedArcs = 0;
+    std::vector<Edge> edges;
+    size_t addedEdges = 0;
     while (getline(infile, line)) {
         //printf("%s\n", line.c_str());
         vector<string> splittedLine{split(line, ' ')};
@@ -58,21 +58,21 @@ unique_ptr<Graph> setupGraph(const string& filename) {
             for (size_t i = 0; i < dimension; ++i) {
                 arcCosts[i] = stoi(splittedLine[3+i]);
             }
-            arcs.emplace_back(tailId, headId, arcCosts);
-            ++addedArcs;
+            edges.emplace_back(addedEdges, tailId, headId, arcCosts);
+            ++addedEdges;
         }
     }
-    assert(addedArcs == arcsCount);
+    assert(addedEdges == arcsCount);
     unique_ptr<Graph> G = make_unique<Graph>(nodesCount, arcsCount);
-    std::sort(arcs.begin(), arcs.end(), EdgeSorter(standardSorting()));
-    G->arcs = std::move(arcs);
+    std::sort(edges.begin(), edges.end(), EdgeSorter(standardSorting()));
+    G->edges = std::move(edges);
     for (Node i = 0; i < nodesCount; ++i) {
         G->setNodeInfo(i);
     }
     vector<NeighborhoodSize> degreePerNode(nodesCount, 0);
-    //printf("Added %lu arcs. Want to build graph now!\n", arcs.size());
-    for (size_t aId = 0; aId < G->arcs.size(); ++aId) {
-        Edge& doubleEndedArc{G->arcs[aId]};
+    //printf("Added %lu edges. Want to build graph now!\n", edges.size());
+    for (size_t aId = 0; aId < G->edges.size(); ++aId) {
+        Edge& doubleEndedArc{G->edges[aId]};
 
         NodeAdjacency& tail = G->node(doubleEndedArc.tail);
         NodeAdjacency& head = G->node(doubleEndedArc.head);
@@ -109,10 +109,11 @@ void Graph::DFS_blue(const Node startNode, ConnectedComponent& reachedNodes) con
     reachedNodes.component.insert(startNode);
     const Neighborhood& arcs{this->adjacentArcs(startNode)};
     for (const Arc& a : arcs) {
-        const Edge& edge{this->arcs[a.idInArcVector]};
+        const Edge& edge{this->edges[a.idInArcVector]};
         if (component.find(a.n) != component.end() || !edge.isBlue) {
             continue;
         }
+        reachedNodes.edgeIds.emplace(a.idInArcVector);
         addInPlace(reachedNodes.cost, a.c);
         DFS_blue(a.n, reachedNodes);
     }
@@ -130,8 +131,8 @@ void Arc::print() const {
     printf("Arc costs: (%d, %d)\n", c[0], c[1]);
 }
 
-Edge::Edge(Node tail, Node head, const CostArray& c):
-    tail{tail}, head{head}, c{c} {}
+Edge::Edge(ArcId id, Node tail, Node head, const CostArray& c):
+    id{id}, tail{tail}, head{head}, c{c} {}
 
 Graph::Graph(Node nodesCount, ArcId arcsCount):
         nodesCount{nodesCount},

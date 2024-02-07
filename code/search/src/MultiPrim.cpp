@@ -22,14 +22,14 @@ inline static boost::dynamic_bitset<> addNode(const boost::dynamic_bitset<>& exi
 }
 
 IGMDA::IGMDA(const Graph &G):
-        originalGraph{G},
-        implicitNodes((1UL<<(this->originalGraph.nodesCount - 1))),
+        graph{G},
+        implicitNodes((1UL<<(this->graph.nodesCount - 1))),
         dominanceBound(generate(MAX_COST)),
-        targetNode{(1UL<<(this->originalGraph.nodesCount - 1)) - 1},
+        targetNode{(1UL<<(this->graph.nodesCount - 1)) - 1},
         extractions{0},
         insertions{0},
         nqtIterations{0} {
-        if (targetNode == 0 && originalGraph.arcsCount > 0) {
+        if (targetNode == 0 && graph.arcsCount > 0) {
             printf("Graph is to big. Leads to overflow computing target implicit node id. Abort\n");
             exit(1);
         }
@@ -50,7 +50,7 @@ IGMDA::TransitionNode& IGMDA::initTransitionNode(
         Node newNode) {
     //boost::dynamic_bitset<> nodeSet = addNode(predSubset.getNodes(), newNode);
     std::unique_ptr<TransitionNode> newTransitionNode =
-            std::make_unique<TransitionNode>(this->originalGraph, std::move(bitRepresentation), decimalRepresentation, predSubset.outgoingArcs(), newNode);
+            std::make_unique<TransitionNode>(this->graph, std::move(bitRepresentation), decimalRepresentation, predSubset.outgoingArcs(), newNode);
     //assert(this->implicitNodes[newTransitionNode->getIndex()] == nullptr);
     long unsigned index = newTransitionNode->getIndex();
     this->implicitNodes[index] = std::move(newTransitionNode);
@@ -78,14 +78,14 @@ IGMDA::TransitionNode& IGMDA::getTransitionNode(const TransitionNode& predSubset
     }
 }
 
-Solution IGMDA::run() {
-    if (this->originalGraph.arcsCount == 0) {
+Solution IGMDA::run(const GraphCompacter& compactGraph) {
+    if (this->graph.arcsCount == 0) {
         return Solution();
     }
     Pool<SubTree> treesPool;
     SubTree* initialTree = treesPool.newItem();
     initialTree->n = 0; initialTree->c = generate(0);
-    std::unique_ptr<TransitionNode> initialImplicitNode = std::make_unique<TransitionNode>(this->originalGraph, 0);
+    std::unique_ptr<TransitionNode> initialImplicitNode = std::make_unique<TransitionNode>(this->graph, 0);
     initialImplicitNode->setQueueTree(initialTree);
     this->implicitNodes[initialImplicitNode->getIndex()] = std::move(initialImplicitNode);
     std::list<SubTree*> solutions;
@@ -100,7 +100,7 @@ Solution IGMDA::run() {
         const TransitionNode& searchNode{*this->implicitNodes[currentNode]};
         assert(searchNode.getQueueTree() == minTree);
 //        printf("Extract minTree with costs %u %u %u. Last arc is %u, predPosition is %lu and node is: \n",
-//               minTree->c[0], minTree->c[1], minTree->c[2], minTree->lastArc, minTree->predLabelPosition);
+//               minTree->c[0], minTree->c[1], minTree->c[2], minTree->lastTransitionArc, minTree->predLabelPosition);
 //        searchNode.print();
 
         assert(searchNode.getIndex() == currentNode);
@@ -116,17 +116,16 @@ Solution IGMDA::run() {
 
         bool success = propagate(minTree, searchNode, heap, treesPool);
         if (success) {
-            permanentTrees.addElement(minTree->predLabelPosition, minTree->lastArc);
+            permanentTrees.addElement(minTree->predLabelPosition, minTree->lastTransitionArc);
         }
         treesPool.free(minTree);
     }
     auto end = std::chrono::high_resolution_clock::now();
-    //for(k=0;k<originalGraph->nodos;k++)
     Solution solution;
     std::chrono::duration<double> duration = end - start;
     solution.time = duration.count();
     storeStatistics(solution, solutions);
-    //this->printSpanningTrees(solutions);
+    //this->printSpanningTrees(solutions, this->permanentTrees, this->graph, compactGraph);
 //    for (const SubTree* tree : solutions) {
 //        printf("SOL;%u;%u;%u\n", tree->c[0], tree->c[1], tree->c[2]);
 //    }
@@ -211,12 +210,12 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
     //CostArray treeCosts = substract(predLabel->c, lb[searchNode.getCardinality()]);
 
     for (const OutgoingArcInfo& outgoingArcInfo : outgoingArcs) {
-        //Pruning by Chen when constructing set of outgoing arcs for searchNode determined that this arc is not active.
+        //Pruning by Chen when constructing set of outgoing edges for searchNode determined that this arc is not active.
         if (outgoingArcInfo.chenPruned || outgoingArcInfo.cutExitPruned) {
             continue;
         }
         ArcId aId = outgoingArcInfo.edgeId;
-        const Edge& edge{this->originalGraph.arcs[aId]};
+        const Edge& edge{this->graph.edges[aId]};
         //printf("\t\tAnalyzing outgoing edge %u --> %u c = (%u,%u,%u) id: %u\n", edge.tail, edge.head, edge.c[0], edge.c[1], edge.c[2], aId);
         assert(!searchNode.getNodes()[edge.tail] || !searchNode.getNodes()[edge.head]);
         Node newTreeNode = searchNode.getNodes()[edge.tail] ? edge.head : edge.tail;
@@ -249,7 +248,7 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
 //                printf("\t\t\t\tThe queue tree is in queue and is %u %u %u, replacement!\n",
 //                       queueTree->c[0], queueTree->c[1], queueTree->c[2]);
                 success = true;
-                const PredArc& oldQueueTreePred = successorNode.getIncomingArc(queueTree->lastArc);
+                const PredArc& oldQueueTreePred = successorNode.getIncomingArc(queueTree->lastTransitionArc);
                 //printf("\n\nSubstitute (%u, %u) with (%u, %u) for index %lu\n", queueTree.c[0], queueTree.c[1], cr1, cr2, queueTree.n);
                 H.decreaseKey(queueTree, newLabel);
                 successorNode.setQueueTree(newLabel);
@@ -261,7 +260,7 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
 //                printf("\t\t\t\tThe queue tree is in queue and is %u %u %u, stays!\n",
 //                       queueTree->c[0], queueTree->c[1], queueTree->c[2]);
                 success = true;
-                const PredArc& predArc = successorNode.getIncomingArc(newLabel->lastArc);
+                const PredArc& predArc = successorNode.getIncomingArc(newLabel->lastTransitionArc);
                 //THE NEW CANDIDATE NEEDS TO BE APPENDED TO THE LIST CORRESPONDING TO ITS LAST ARC!
                 predArc.nextQueueTrees.push_back(newLabel);
             }
@@ -296,28 +295,44 @@ void IGMDA::storeStatistics(Solution &sol, std::list<SubTree*>& solutions) const
     sol.transitionArcs = countTransitionArcs();
 }
 
-void IGMDA::printSpanningTrees(const std::list<SubTree*>& solutions) const {
+void IGMDA::printSpanningTrees(const std::list<SubTree*>& solutions, const Permanents& permanents, const Graph& G, const GraphCompacter& compactGraph) {
     for (const SubTree* tree : solutions) {
-        printf("New tree with costs %u %u %u\n", tree->c[0], tree->c[1], tree->c[2]);
-        PermanentTree const * pred = &this->permanentTrees.getElement(tree->predLabelPosition);
-        Edge const * preimageOfPredArc{&this->originalGraph.arcs[tree->lastArc]};
-        printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", preimageOfPredArc->tail, preimageOfPredArc->head, preimageOfPredArc->c[0],  preimageOfPredArc->c[1],  preimageOfPredArc->c[2]);
+        size_t printedEdges{0};
+        CostArray treeCosts{generate(0)};
+        addInPlace(treeCosts, tree->c);
+        addInPlace(treeCosts, compactGraph.connectedComponentsCost);
+        printf("New tree with costs %u %u %u\n", treeCosts[0], treeCosts[1], treeCosts[2]);
+        PermanentTree const * pred = &permanents.getElement(tree->predLabelPosition);
+        Edge const * preimageOfPredArc{&G.edges[tree->lastTransitionArc]};
+        const Edge& edgeInOriginalGraph = compactGraph.originalGraph.edges[compactGraph.getOriginalId(*preimageOfPredArc)];
+        printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", edgeInOriginalGraph.tail, edgeInOriginalGraph.head, edgeInOriginalGraph.c[0],  edgeInOriginalGraph.c[1],  edgeInOriginalGraph.c[2]);
+        ++printedEdges;
         CostArray currentCosts = substract(tree->c, preimageOfPredArc->c);
-        while (true) {
+        while (printedEdges < G.nodesCount-1) {
 //            printf("\t\t%u %u %u after edge [%u,%u].\n",
 //                   currentCosts[0], currentCosts[1], currentCosts[2],
 //                   preimageOfPredArc->tail, preimageOfPredArc->head);
 //            std::cout << "\t\tNodes: " << this->transitionNodes.at(pred->predSubset)->getNodes() << std::endl;
             //currentCosts = substract(currentCosts, preimageOfPredArc->c);
-            preimageOfPredArc = &this->originalGraph.arcs[pred->lastArc];
-            printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", preimageOfPredArc->tail, preimageOfPredArc->head, preimageOfPredArc->c[0],  preimageOfPredArc->c[1],  preimageOfPredArc->c[2]);
+            preimageOfPredArc = &G.edges[pred->lastArc];
+            const Edge& edgeInOriginalGraph = compactGraph.originalGraph.edges[compactGraph.getOriginalId(*preimageOfPredArc)];
+            printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", edgeInOriginalGraph.tail, edgeInOriginalGraph.head, edgeInOriginalGraph.c[0],  edgeInOriginalGraph.c[1],  edgeInOriginalGraph.c[2]);
+            ++printedEdges;
             currentCosts = substract(currentCosts, preimageOfPredArc->c);
-            pred = &this->permanentTrees.getElement(pred->predLabelPosition);
+            pred = &permanents.getElement(pred->predLabelPosition);
             if (pred->predLabelPosition == std::numeric_limits<size_t>::max()) {
 //                printf("\t\t%u %u %u after edge [%u,%u]\n", currentCosts[0], currentCosts[1], currentCosts[2], preimageOfPredArc->tail, preimageOfPredArc->head);
                 break;
             }
         }
+        for (const auto& connectedComponent: *compactGraph.connectedComponents) {
+            for (ArcId edgeId : connectedComponent.edgeIds) {
+                const Edge& edgeInOriginalGraph{compactGraph.originalGraph.edges[edgeId]};
+                printf("Edge: [%u, %u] with c = (%u, %u, %u)\n", edgeInOriginalGraph.tail, edgeInOriginalGraph.head, edgeInOriginalGraph.c[0],  edgeInOriginalGraph.c[1],  edgeInOriginalGraph.c[2]);
+                ++printedEdges;
+            }
+        }
+        assert(printedEdges == compactGraph.originalGraph.nodesCount-1);
     }
 }
 
@@ -362,7 +377,7 @@ size_t IGMDA::countTransitionArcs() const {
 //        CostArray solutionCosts = {tree->c[0], tree->c[1]};
 //        unsigned long predNodeSet = tree->predSubset;
 //        size_t predLabelPos = tree->predLabelPosition;
-//        const Edge& lastAddedArc{originalGraph.arcs[tree->lastArc]};
+//        const Edge& lastAddedArc{graph.edges[tree->lastTransitionArc]};
 //        printf("\t%u -- %u, c = (%u, %u, %u), n = %lu\n",
 //               lastAddedArc.tail, lastAddedArc.head,
 //               tree->c[0], tree->c[1], tree->c[2], tree->n);
@@ -371,7 +386,7 @@ size_t IGMDA::countTransitionArcs() const {
 ////        while (predLabelPos != std::numeric_limits<size_t>::max()) {
 //        while (predNodeSet != 0) {
 //            const SubTree* subTree{permanentTrees.at(predNodeSet)[predLabelPos]};
-//            const Edge& lastAddedArc{originalGraph.arcs[subTree->lastArc]};
+//            const Edge& lastAddedArc{graph.edges[subTree->lastTransitionArc]};
 //            printf("\t%u -- %u, c = (%u, %u, %u), n = %lu\n",
 //                   lastAddedArc.tail, lastAddedArc.head,
 //                   subTree->c[0], subTree->c[1], subTree->c[2], subTree->n);

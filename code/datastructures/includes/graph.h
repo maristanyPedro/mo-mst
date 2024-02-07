@@ -37,8 +37,8 @@ struct ArcSorterBN {
 
 
 struct Edge {
-    Edge() = default;
-    Edge(Node tail, Node head, const CostArray& c);
+    Edge() = delete;
+    Edge(ArcId id, Node tail, Node head, const CostArray& c);
 
     Edge& operator=(const Edge& other) {
         this->tail = other.tail;
@@ -49,7 +49,7 @@ struct Edge {
         return *this;
     }
 
-    //Node tail{INVALID_NODE};
+    const ArcId id;
     Node tail{INVALID_NODE};
     Node head{INVALID_NODE};
 
@@ -88,6 +88,7 @@ class NodeAdjacency {
 struct ConnectedComponent {
     CostArray cost{generate(0)};
     std::set<Node> component;
+    std::set<ArcId> edgeIds;
 };
 
 typedef std::vector<ConnectedComponent> ConnectedComponents;
@@ -100,7 +101,7 @@ struct OutgoingArcInfo {
         edgeId{other.edgeId}, incomingArcId{INVALID_ARC}, chenPruned{false}, cutExitPruned{other.cutExitPruned} {}
 
     ArcId edgeId;
-    mutable ArcId incomingArcId; ///< Position of the current arc in the vector of incoming arcs of the arc's head node.
+    mutable ArcId incomingArcId; ///< Position of the current arc in the vector of incoming edges of the arc's head node.
     bool chenPruned;
     bool cutExitPruned;
 };
@@ -133,7 +134,7 @@ class Graph {
 
         NodeAdjacency& addNode(Node id);
 
-    std::vector<Edge> arcs;
+    std::vector<Edge> edges;
     Node nodesCount{0};
     ArcId arcsCount{0};
 
@@ -157,8 +158,8 @@ struct OutgoingArcSorter {
             G{G} {}
 
     inline bool operator()(const OutgoingArcInfo& lhs, const OutgoingArcInfo& rhs) const {
-        const Edge& a_lhs = G.arcs[lhs.edgeId];
-        const Edge& a_rhs = G.arcs[rhs.edgeId];
+        const Edge& a_lhs = G.edges[lhs.edgeId];
+        const Edge& a_rhs = G.edges[rhs.edgeId];
         return lexSmaller(a_lhs.c, a_rhs.c);
     }
 private:

@@ -41,7 +41,7 @@ public:
 
     void calculateHeuristic(const Graph& G);
 
-    //Graph& originalGraph;
+    //Graph& graph;
     //Entries of these vector are indexed from 0 to number of nodes - 1. Entry k stands for spanning trees
     //of every subset of nodes containing n nodes and contains the cheapest possible way of connecting n-k
     //nodes using a spanning tree of cardinality n-k.

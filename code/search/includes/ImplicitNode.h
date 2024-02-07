@@ -32,7 +32,7 @@ public:
      * @param nodes Passing by value is ok since we are moving the bitset into the 'containedNodes' member.
      */
     ImplicitNode(const Graph& originalGraph, boost::dynamic_bitset<> nodes, long unsigned index, const OutgoingArcs& existingCut, Node newNode);
-    //ImplicitNode(const Graph& originalGraph, const ImplicitNode& predSubset, Node newNode);
+    //ImplicitNode(const Graph& graph, const ImplicitNode& predSubset, Node newNode);
 
     ImplicitNode(const Graph &originalGraph, Node initialNode);
 
@@ -105,7 +105,7 @@ ImplicitNode<LabelType>::ImplicitNode(const Graph& originalGraph, boost::dynamic
         cardinality{this->containedNodes.count()} {
     //std::cout << "Constructor for growing tree: " << containedNodes << std::endl;
 //    for (ArcId aId : this->outgoingArcs()) {
-//        const Edge& arc = originalGraph.arcs[aId];
+//        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
 //    std::cout << "Index: " << this->getIndex() << std::endl;
@@ -120,7 +120,7 @@ ImplicitNode<LabelType>::ImplicitNode(const Graph &originalGraph, Node initialNo
         cardinality{1} {
 //    std::cout << "Constructor for initial node: " << containedNodes << std::endl;
 //    for (ArcId aId : this->outgoingArcs()) {
-//        const Edge& arc = originalGraph.arcs[aId];
+//        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
 //    std::cout << "Index: " << this->getIndex() << std::endl;
@@ -173,14 +173,14 @@ template <typename LabelType>
 void ImplicitNode<LabelType>::chenPruning(const Graph& G, OutgoingArcs& outgoingArcs) {
     for (size_t i = 0; i < outgoingArcs.size(); ++i) {
         const ArcId edgeId = outgoingArcs[i].edgeId;
-        const Edge& edge = G.arcs[edgeId];
+        const Edge& edge = G.edges[edgeId];
         for (size_t j = 0; j < i; ++j) {
-            if (dominates(G.arcs[outgoingArcs[j].edgeId].c, edge.c)) {
+            if (dominates(G.edges[outgoingArcs[j].edgeId].c, edge.c)) {
                 //printf("For node %lu, eliminating arc %lu\n", this->index, i);
                 outgoingArcs[i].chenPruned = true;
                 Node newNodeInDominated = this->containedNodes[edge.head] ? edge.tail : edge.head;
                 assert(!this->containedNodes[newNodeInDominated]);
-                Node newNodeInDominating = this->containedNodes[G.arcs[outgoingArcs[j].edgeId].head] ? G.arcs[outgoingArcs[j].edgeId].tail : G.arcs[outgoingArcs[j].edgeId].head;
+                Node newNodeInDominating = this->containedNodes[G.edges[outgoingArcs[j].edgeId].head] ? G.edges[outgoingArcs[j].edgeId].tail : G.edges[outgoingArcs[j].edgeId].head;
                 assert(!this->containedNodes[newNodeInDominating]);
                 if (newNodeInDominated == newNodeInDominating) {
                     outgoingArcs[i].cutExitPruned = true;
@@ -195,19 +195,19 @@ template <typename LabelType>
 std::unique_ptr<OutgoingArcs> ImplicitNode<LabelType>::computeOutgoingArcsNew(
         const Graph& G, const OutgoingArcs& existingCut, Node newNode) {
     std::unique_ptr<OutgoingArcs> result = std::make_unique<OutgoingArcs>();
-    //First, add all outgoing arcs from the old tree that do not end at the new node.
+    //First, add all outgoing edges from the old tree that do not end at the new node.
     for (const OutgoingArcInfo& info : existingCut) {
-        const Edge& edge = G.arcs[info.edgeId];
+        const Edge& edge = G.edges[info.edgeId];
         if (info.cutExitPruned || edge.tail == newNode || edge.head == newNode) {
 //        if (edge.tail == newNode || edge.head == newNode) {
             continue;
         }
         result->push_back(OutgoingArcInfo(info));
     }
-    //Now, add the adjacent arcs from the newNode that do not end at a node contained in the old tree.
+    //Now, add the adjacent edges from the newNode that do not end at a node contained in the old tree.
     const Neighborhood& neighborhood{G.node(newNode).adjacentArcs};
     for (const Arc& arc : neighborhood) {
-        const Edge& edge = G.arcs[arc.idInArcVector];
+        const Edge& edge = G.edges[arc.idInArcVector];
         if (edge.isRed) {
             continue;
         }

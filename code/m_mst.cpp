@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 #ifdef IG_MDA
     NEW_GENERATION::IGMDA biSearch(contractedGraph.compactGraph);
     std::clock_t c_start = std::clock();
-    Solution solution = biSearch.run();
+    Solution solution = biSearch.run(contractedGraph);
     std::clock_t c_end = std::clock();
     std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     char resultsBuffer [350];
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef BN_ALGO
     EdgeSorterBN sorter;
-    std::sort(contractedGraph.compactGraph.arcs.begin(), contractedGraph.compactGraph.arcs.end(), sorter);
+    std::sort(contractedGraph.compactGraph.edges.begin(), contractedGraph.compactGraph.edges.end(), sorter);
     ArcSorterBN arcSorter;
     for (Node n = 0; n < contractedGraph.compactGraph.nodesCount; ++n) {
         NodeAdjacency& neighborhood = contractedGraph.compactGraph.node(n);

@@ -27,7 +27,7 @@ namespace NEW_GENERATION {
     typedef ImplicitNode<SubTree> TransitionNode;
     public:
         explicit IGMDA(const Graph& G);
-        Solution run();
+        Solution run(const GraphCompacter& compactGraph);
         void printParetoFront(const ConnectedComponents& blueArcsComponents) const;
 
     private:
@@ -43,7 +43,7 @@ namespace NEW_GENERATION {
 
         bool propagate(const SubTree* predLabel, const TransitionNode& searchNode, BinaryHeap<SubTree, CandidateLexComp>& H, Pool<SubTree>& treesPool);
 
-        void printSpanningTrees(const std::list<SubTree*>& solutions) const;
+        static void printSpanningTrees(const std::list<SubTree*>& solutions, const Permanents& permanents, const Graph& G, const GraphCompacter& compactGraph);
 
         inline bool pruned(const CostArray& c);
 
@@ -54,7 +54,7 @@ namespace NEW_GENERATION {
         size_t countTransitionArcs() const;
 
     private:
-        const Graph& originalGraph;
+        const Graph& graph;
         Permanents permanentTrees;
         std::unordered_map<long unsigned, TruncatedFront> truncated;
         std::vector<std::unique_ptr<TransitionNode>> implicitNodes;
