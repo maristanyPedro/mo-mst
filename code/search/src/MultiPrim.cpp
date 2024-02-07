@@ -125,7 +125,7 @@ Solution IGMDA::run(const GraphCompacter& compactGraph) {
     std::chrono::duration<double> duration = end - start;
     solution.time = duration.count();
     storeStatistics(solution, solutions);
-    //this->printSpanningTrees(solutions, this->permanentTrees, this->graph, compactGraph);
+    this->printSpanningTrees(solutions, this->permanentTrees, this->graph, compactGraph);
 //    for (const SubTree* tree : solutions) {
 //        printf("SOL;%u;%u;%u\n", tree->c[0], tree->c[1], tree->c[2]);
 //    }
