@@ -35,35 +35,47 @@ int main(int argc, char *argv[]) {
     logCollectionFile = fopen("logs.txt", "a");
     std::stringstream outputStream;
 
-    Preprocessor preprocessor;
-    GraphCompacter contractedGraph = preprocessor.run(G);
-
 #ifdef IG_MDA
-    NEW_GENERATION::IGMDA biSearch(contractedGraph.compactGraph);
-    std::clock_t c_start = std::clock();
-    Solution solution = biSearch.run(contractedGraph);
-    std::clock_t c_end = std::clock();
-    std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    char resultsBuffer [350];
-    sprintf(resultsBuffer, "IG-MDA;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
-            DIM, graphName.c_str(), G.nodesCount, G.arcsCount,
-            contractedGraph.blueArcs, contractedGraph.redArcs,
-            preprocessor.duration, solution.time, (1000* (c_end - c_start) / CLOCKS_PER_SEC)/1000.,
-            solution.trees, solution.extractions, solution.insertions, solution.nqtIt, solution.transitionNodes, solution.transitionArcs,
-            host_name.c_str(), std::ctime(&end_time));
-    std::cout << resultsBuffer << std::endl;
-    fprintf(logCollectionFile, "%s", resultsBuffer);
+    {
+        Preprocessor preprocessor;
+        GraphCompacter contractedGraph = preprocessor.run(G);
+        NEW_GENERATION::IGMDA biSearch(contractedGraph.compactGraph);
+        std::clock_t c_start = std::clock();
+        Solution solution = biSearch.run(contractedGraph);
+        std::clock_t c_end = std::clock();
+        std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        char resultsBuffer[350];
+        sprintf(resultsBuffer, "IG-MDA;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
+                DIM, graphName.c_str(), G.nodesCount, G.arcsCount,
+                contractedGraph.blueArcs, contractedGraph.redArcs,
+                preprocessor.duration, solution.time, (1000 * (c_end - c_start) / CLOCKS_PER_SEC) / 1000.,
+                solution.trees, solution.extractions, solution.insertions, solution.nqtIt, solution.transitionNodes,
+                solution.transitionArcs,
+                host_name.c_str(), std::ctime(&end_time));
+        std::cout << resultsBuffer << std::endl;
+        fprintf(logCollectionFile, "%s", resultsBuffer);
+    };
 #endif
 
 
 #ifdef BN_ALGO
     EdgeSorterBN sorter;
-    std::sort(contractedGraph.compactGraph.edges.begin(), contractedGraph.compactGraph.edges.end(), sorter);
-    ArcSorterBN arcSorter;
-    for (Node n = 0; n < contractedGraph.compactGraph.nodesCount; ++n) {
-        NodeAdjacency& neighborhood = contractedGraph.compactGraph.node(n);
-        std::sort(neighborhood.adjacentArcs.begin(), neighborhood.adjacentArcs.end(), arcSorter);
+    std::sort(G.edges.begin(), G.edges.end(), sorter);
+    for (size_t edgeId = 0; edgeId < G.edges.size(); ++edgeId) {
+        Edge &doubleEndedArc{G.edges[edgeId]};
+        assert(doubleEndedArc.id == INVALID_ARC);
+        doubleEndedArc.id = edgeId;
     }
+    ArcSorterBN arcSorter;
+    for (Node n = 0; n < G.nodesCount; ++n) {
+        NodeAdjacency& neighborhood = G.node(n);
+        std::sort(neighborhood.adjacentArcs.begin(), neighborhood.adjacentArcs.end(), arcSorter);
+        for (size_t id = 0; id < neighborhood.adjacentArcs.size(); ++id) {
+            neighborhood.adjacentArcs[id].idInArcVector = id;
+        }
+    }
+    Preprocessor preprocessor;
+    GraphCompacter contractedGraph = preprocessor.run(G);
 
     BN::MultiobjectiveSearch bnSearch(contractedGraph.compactGraph);
     std::clock_t c_start_bn = std::clock();

@@ -135,7 +135,7 @@ namespace BN {
                 c{c}, n{n} {}
 
         void print() const {
-            printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastArc);
+            printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastArcId);
         }
 
         CostArray c{generate(MAX_COST)};
@@ -144,7 +144,7 @@ namespace BN {
         long unsigned predSubset{std::numeric_limits<long unsigned>::max()};
         Node lastTail{0};
         Node lastHead{0};
-        ArcId lastArc{std::numeric_limits<ArcId>::max()};
+        ArcId lastArcId{std::numeric_limits<ArcId>::max()};
         size_t predLabelPosition{std::numeric_limits<size_t>::max()};
         long unsigned n{INVALID_NODE};
         uint32_t priority{std::numeric_limits<uint32_t>::max()}; ///< for heap operations.
@@ -156,7 +156,7 @@ namespace BN {
         PermanentQueueTree() = default;
 
         PermanentQueueTree(const QueueTree* qt) :
-        predSubset{qt->predSubset}, lastArc{qt->lastArc}, predLabelPosition{qt->predLabelPosition} {}
+                predSubset{qt->predSubset}, lastArc{qt->lastArcId}, predLabelPosition{qt->predLabelPosition} {}
 
         long unsigned predSubset{std::numeric_limits<long unsigned>::max()};
         ArcId lastArc{std::numeric_limits<ArcId>::max()};

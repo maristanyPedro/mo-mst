@@ -10,7 +10,7 @@
 
 using namespace std;
 
-unique_ptr<Graph> setupGraph(const string& filename) {
+unique_ptr<Graph> setupGraph(const string& filename, const GenericEdgeSorter& edgeSorter) {
     ifstream infile(filename);
     string line;
     size_t nodesCount =0, arcsCount = 0;

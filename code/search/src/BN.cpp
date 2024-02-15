@@ -27,7 +27,6 @@ MultiobjectiveSearch::MultiobjectiveSearch(const Graph &G):
     //queueTrees((1<<(this->graph.nodesCount-1))),
     //lastD2((1<<(this->graph.nodesCount-1)), MAX_COST),
     implicitNodes((1UL<<(this->G.nodesCount - 1))),
-    permanentTrees((1UL<<(this->G.nodesCount - 1))),
     dominanceBound(generate(MAX_COST)),
     targetNode{(1UL<<(this->G.nodesCount-1))-1},
     extractions{0},
@@ -67,53 +66,6 @@ MultiobjectiveSearch::TransitionNode& MultiobjectiveSearch::getSubset(const Tran
         //printf("---------> NodeSet exists! Just take it\n");
         return *this->implicitNodes[idea];
 //        return *this->test[idea];
-    }
-}
-
-bool MultiobjectiveSearch::merge(OpenCosts& open, QueueTree* newLabel) {
-    if (open.empty()) {
-        open.push_back(newLabel);
-        return true;
-    }
-    auto it = open.begin();
-    assert (!open.empty());
-    while (it != open.end() && lexSmaller((*it)->c, newLabel->c)) {
-//    while (it != open.end() && (*it)->cSum < newLabel->cSum) {
-        if (dominates((*it)->c, newLabel->c)) {
-            this->treePool.free(newLabel);
-            return false;
-        }
-        ++it;
-    }
-    it  = open.insert(it, newLabel);
-    bool insertedAtBeginning = it == open.begin();
-    const CostArray& newC = (*it)->c;
-    ++it;
-    while (it != open.end()) {
-        if (dominates(newC, (*it)->c)) {
-//            pool->free(*it);
-            this->treePool.free(*it);
-            it = open.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
-    return insertedAtBeginning;
-}
-
-void MultiobjectiveSearch::clean(OpenCosts& open, QueueTree* newLabel) {
-    const CostArray& newC = newLabel->c;
-    auto it = open.begin();
-    while (it != open.end()) {
-        if (dominates(newC, (*it)->c)) {
-//            pool->free(*it);
-            this->treePool.free(*it);
-            it = open.erase(it);
-        }
-        else {
-            ++it;
-        }
     }
 }
 
@@ -165,7 +117,7 @@ Solution MultiobjectiveSearch::run() {
     std::unique_ptr<TransitionNode> initialImplicitNode = std::make_unique<TransitionNode>(this->G, 0);
     this->implicitNodes[initialImplicitNode->getIndex()] = std::move(initialImplicitNode);
     this->truncated.emplace(targetNode, TruncatedFront());
-    QueueTree* recentlyExtracted;
+    QueueTree* efficientTree;
     std::list<QueueTree*> targetFront;
 
     BinaryHeap<QueueTree, CandidateLexComp> heap;
@@ -173,30 +125,31 @@ Solution MultiobjectiveSearch::run() {
     heap.push(initialTree);
     auto start = std::chrono::high_resolution_clock::now();
     while (heap.size() != 0) {
-        recentlyExtracted = heap.pop();
-        long unsigned currentNode = recentlyExtracted->n;
-        TransitionNode& searchNode{*this->implicitNodes[currentNode]};
-        assert(searchNode.getIndex() == currentNode);
-        TruncatedFront& currentFront{this->truncated[searchNode.getIndex()]};
-        bool inserted = truncatedInsertionLazy(currentFront, recentlyExtracted->c);
+        efficientTree = heap.pop();
+        long unsigned currentTransitionNodeId = efficientTree->n;
+        TransitionNode& currentTransitionNode{*this->implicitNodes[currentTransitionNodeId]};
+        assert(currentTransitionNode.getIndex() == currentTransitionNodeId);
+        TruncatedFront& currentFront{this->truncated[currentTransitionNode.getIndex()]};
+        bool inserted = truncatedInsertionLazy(currentFront, efficientTree->c);
         if (!inserted) {
-            this->treePool.free(recentlyExtracted);
+            this->treePool.free(efficientTree);
             continue;
         }
 
-        if (currentNode == targetNode) {
-            targetFront.push_back(recentlyExtracted);
-//            printf("%u %u %u\n", recentlyExtracted->c[0], recentlyExtracted->c[1], recentlyExtracted->c[2]);
+        if (currentTransitionNodeId == targetNode) {
+            targetFront.push_back(efficientTree);
+//            printf("%u %u %u\n", efficientTree->c[0], efficientTree->c[1], efficientTree->c[2]);
             continue;
         }
         extractions++;
-        assert(searchNode.getIndex() == currentNode);
+        assert(currentTransitionNode.getIndex() == currentTransitionNodeId);
 
-        bool success = propagate(recentlyExtracted, searchNode, heap);
+        bool success = propagate(efficientTree, currentTransitionNode, heap);
         if (success) {
-            permanentTrees[currentNode].emplace_back(recentlyExtracted);
+            permanentTrees.addElement()
+            permanentTrees[currentTransitionNodeId].emplace_back(efficientTree);
         }
-        this->treePool.free(recentlyExtracted);
+        this->treePool.free(efficientTree);
     }
     auto end = std::chrono::high_resolution_clock::now();
     //for(k=0;k<graph->nodos;k++)
@@ -216,8 +169,7 @@ bool MultiobjectiveSearch::buildAndAnalyze(
         BinaryHeap<QueueTree, BN::CandidateLexComp>& H,
         Node lastTail,
         const Arc& edge,
-        ArcId aId,
-//        std::pair<Node, Node>& orientedArc,
+        ArcId lastAddedEdgeId,
         Node newTreeNode) {
     Node currentNode = predLabel->n;
     CostArray costCandidate = generate(MAX_COST);
@@ -231,10 +183,10 @@ bool MultiobjectiveSearch::buildAndAnalyze(
     }
     QueueTree* newOpenTree = this->treePool.newItem();
     newOpenTree->c = costCandidate;
-    newOpenTree->lastArc = aId;
+    newOpenTree->lastArcId = lastAddedEdgeId;
     newOpenTree->predSubset = currentNode;
     newOpenTree->n = successorNode.getIndex();
-    newOpenTree->predLabelPosition = permanentTrees[currentNode].size() - 1; ///< That's were predLabel was stored and made permanent.
+    newOpenTree->predLabelPosition = this->permanentTrees.getCurrentIndex();
     newOpenTree->lastTail = lastTail;
     newOpenTree->lastHead = edge.n;
     addNode2Sequence(predLabel, *newOpenTree, newTreeNode);
@@ -244,41 +196,43 @@ bool MultiobjectiveSearch::buildAndAnalyze(
     //newOpenTree.lastArcOriented = orientedArc;
 }
 
-bool MultiobjectiveSearch::propagate(QueueTree* predLabel, const TransitionNode& searchNode, BinaryHeap<QueueTree, BN::CandidateLexComp>& H) {
-    ArcId lastArcId = predLabel->lastArc;
-    const Neighborhood& lastTailNeighborhood{this->G.node(predLabel->lastTail).adjacentArcs};
+bool MultiobjectiveSearch::propagate(QueueTree* efficientTree, const TransitionNode& transitionNode, BinaryHeap<QueueTree, BN::CandidateLexComp>& H) {
+    ArcId lastArcId = efficientTree->lastArcId;
+    const Neighborhood& lastTailNeighborhood{this->G.node(efficientTree->lastTail).adjacentArcs};
     bool success = false;
+
     for (ArcId aId = lastArcId + 1; aId < lastTailNeighborhood.size(); ++aId) {
         const Arc& arc = lastTailNeighborhood[aId];
-        if (arc.redArc || searchNode.getNodes()[arc.n]) {
+        const Edge& edge{this->G.edges[arc.idInArcVector]};
+        if (arc.redArc || transitionNode.getNodes()[arc.n]) {
             continue;
         }
-        if (predLabel->lastHead >= arc.n) {
+        if (efficientTree->lastHead >= arc.n) {
             continue;
         }
         Node newTreeNode = arc.n;
-        //std::pair<Node, Node> orientedArc{predLabel.lastTail, arc.n};
-        bool added = buildAndAnalyze(predLabel, searchNode, H, predLabel->lastTail, arc, aId, newTreeNode);
+        //std::pair<Node, Node> orientedArc{efficientTree.lastTail, arc.n};
+        bool added = buildAndAnalyze(efficientTree, transitionNode, H, efficientTree->lastTail, arc, edge.id, newTreeNode);
         if (added) {
             success = true;
         }
     }
     //Skip the next propagation block if there is only one node in the tree. Reason: no arc in the tree.
-    if (predLabel->addedNodesInOrder.size() == 1) {
+    if (efficientTree->addedNodesInOrder.size() == 1) {
         return success;
     }
-    size_t indexOfTail = predLabel->addedNode2Index.at(predLabel->lastTail);
-    for (size_t i = indexOfTail + 1; i < predLabel->addedNode2Index.size(); ++i) {
-        Node tail = predLabel->addedNodesInOrder[i];
+    size_t indexOfTail = efficientTree->addedNode2Index.at(efficientTree->lastTail);
+    for (size_t i = indexOfTail + 1; i < efficientTree->addedNode2Index.size(); ++i) {
+        Node tail = efficientTree->addedNodesInOrder[i];
         const Neighborhood& neighborhood{this->G.node(tail).adjacentArcs};
         for (ArcId aId = 0; aId < neighborhood.size(); ++aId) {
             const Arc& arc = neighborhood[aId];
-            if (arc.redArc || searchNode.getNodes()[arc.n]) {
+            if (arc.redArc || transitionNode.getNodes()[arc.n]) {
                 continue;
             }
             Node newTreeNode{arc.n};
             //std::pair<Node, Node> orientedArc{tail, arc.n};
-            bool added = buildAndAnalyze(predLabel, searchNode, H, tail, arc, aId, newTreeNode);
+            bool added = buildAndAnalyze(efficientTree, transitionNode, H, tail, arc, aId, newTreeNode);
             if (added) {
                 success = true;
             }
@@ -327,7 +281,7 @@ void MultiobjectiveSearch::printSpanningTrees(const std::list<QueueTree*>& spann
         CostArray solutionCosts = {tree->c[0], tree->c[1]};
         unsigned long predNodeSet = tree->predSubset;
         size_t predLabelPos = tree->predLabelPosition;
-        const Edge& lastAddedArc{G.edges[tree->lastArc]};
+        const Edge& lastAddedArc{G.edges[tree->lastArcId]};
         printf("\t%u -- %u, c = (%u, %u), n = %lu\n",
                lastAddedArc.tail, lastAddedArc.head,
                tree->c[0], tree->c[1], tree->n);

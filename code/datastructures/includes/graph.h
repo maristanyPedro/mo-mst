@@ -40,15 +40,7 @@ struct Edge {
     Edge() = delete;
     Edge(ArcId id, Node tail, Node head, const CostArray& c);
 
-    Edge& operator=(const Edge& other) {
-        this->tail = other.tail;
-        this->head = other.head;
-        this->c = other.c;
-        this->id = other.id;
-        this->isRed = other.isRed;
-        this->isBlue = other.isBlue;
-        return *this;
-    }
+    Edge& operator=(const Edge& other) = default;
 
     void print() const;
 
