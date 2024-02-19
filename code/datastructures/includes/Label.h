@@ -10,122 +10,98 @@
 
 #include "typedefs.h"
 
-struct SubTree{
-    SubTree() = default;
+namespace MultiPrim {
+    struct SubTree {
+        SubTree() = default;
 
-//    SubTree(long unsigned n, const CostArray& c):
-//        c{c}, n{n} {}
-
-    inline void initialize(Node newNode) {
-        predLabelPosition = std::numeric_limits<size_t>::max();
-        lastTransitionArc = INVALID_ARC;
-        lastEdgeId = INVALID_ARC;
-        n = newNode;
-//        this->knownTargetElements = 0;
-        this->nclChecked = false;
-        inQueue = false;
-        //c = generate(MAX_COST);
-        assert(!inQueue);
-    }
-
-    inline void update(Node nNew, const CostArray& cNew, EdgeId la, EdgeId lastEdgeId, size_t plp) {
-        this->n = nNew;
-        this->c = cNew;
-        this->lastTransitionArc = la;
-        this->predLabelPosition = plp;
-        this->lastEdgeId = lastEdgeId;
-//        this->knownTargetElements = kTe;
-        this->nclChecked = false;
-    }
-
-    void print() const {
-        printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastTransitionArc);
-    }
-
-    CostArray c{generate(MAX_COST)};
-    size_t predLabelPosition{std::numeric_limits<size_t>::max()};
-    EdgeId lastTransitionArc{std::numeric_limits<uint32_t>::max()};
-    EdgeId lastEdgeId{std::numeric_limits<uint32_t>::max()};
-    long unsigned n{INVALID_NODE};
-    uint32_t priority{std::numeric_limits<uint32_t>::max()}; ///< for heap operations.
-    SubTree* next{nullptr};
-//    uint16_t knownTargetElements{0};
-    bool nclChecked{false};
-    bool inQueue{false};
-};
-
-class List {
-public:
-    SubTree* first{nullptr};
-    SubTree* last{nullptr};
-    size_t size{0};
-
-    inline void push_back(SubTree* ec) {
-        if (this->empty()) {
-            this->first = ec;
-            this->last = ec;
-            ec->next = nullptr;
+        inline void initialize(Node newNode) {
+            predLabelPosition = std::numeric_limits<size_t>::max();
+            lastTransitionArc = INVALID_ARC;
+            lastEdgeId = INVALID_ARC;
+            n = newNode;
+            this->nclChecked = false;
+            inQueue = false;
+            assert(!inQueue);
         }
-        else {
-            this->last->next = ec;
-            this->last = ec;
-            ec->next = nullptr;
-        }
-        ++size;
-    }
 
-    inline void push_front(SubTree* l) {
-        if (this->empty()) {
-            this->first = l;
-            this->last = l;
-            l->next = nullptr;
+        inline void update(Node nNew, const CostArray &cNew, EdgeId la, EdgeId lastEdgeId, size_t plp) {
+            this->n = nNew;
+            this->c = cNew;
+            this->lastTransitionArc = la;
+            this->predLabelPosition = plp;
+            this->lastEdgeId = lastEdgeId;
+            this->nclChecked = false;
         }
-        else {
-            l->next = this->first;
-            this->first = l;
-        }
-        ++size;
-    }
 
-    inline SubTree* pop_front() {
-        if (this->empty()) {
-            return nullptr;
-        }
-        else if (this->size == 1) {
-            this->first = nullptr;
-            this->last = nullptr;
-            --size;
-            return nullptr;
-        }
-        else {
-            SubTree* front = this->first;
-            this->first = front->next;
-            --size;
-            return this->first;
-        }
-    }
+        CostArray c{generate(MAX_COST)};
+        size_t predLabelPosition{std::numeric_limits<size_t>::max()};
+        EdgeId lastTransitionArc{std::numeric_limits<uint32_t>::max()};
+        EdgeId lastEdgeId{std::numeric_limits<uint32_t>::max()};
+        long unsigned n{INVALID_NODE};
+        uint32_t priority{std::numeric_limits<uint32_t>::max()}; ///< for heap operations.
+        SubTree *next{nullptr};
+        bool nclChecked{false};
+        bool inQueue{false};
+    };
 
-    inline bool empty() const {
-        return this->size == 0;
-    }
-};
+    struct CandidateLexComp {
+        inline bool operator() (const SubTree* lhs, const SubTree* rhs) const {
+            return lexSmaller(lhs->c, rhs->c);
+        }
+    };
 
-//bool equal(const List& l1, const List& l2) {
-//    SubTree* it1 = l1.first;
-//    SubTree* it2 = l2.first;
-//    while (it1 != nullptr && it2 != nullptr) {
-//        if (it1 != it2) {
-//            return false;
-//        }
-//        it1 = it
-//    }
-//}
+    class List {
+    public:
+        SubTree *first{nullptr};
+        SubTree *last{nullptr};
+        size_t size{0};
 
-struct CandidateLexComp {
-    inline bool operator() (const SubTree* lhs, const SubTree* rhs) const {
-        return lexSmaller(lhs->c, rhs->c);
-    }
-};
+        inline void push_back(SubTree *ec) {
+            if (this->empty()) {
+                this->first = ec;
+                this->last = ec;
+                ec->next = nullptr;
+            } else {
+                this->last->next = ec;
+                this->last = ec;
+                ec->next = nullptr;
+            }
+            ++size;
+        }
+
+        inline void push_front(SubTree *l) {
+            if (this->empty()) {
+                this->first = l;
+                this->last = l;
+                l->next = nullptr;
+            } else {
+                l->next = this->first;
+                this->first = l;
+            }
+            ++size;
+        }
+
+        inline SubTree *pop_front() {
+            if (this->empty()) {
+                return nullptr;
+            } else if (this->size == 1) {
+                this->first = nullptr;
+                this->last = nullptr;
+                --size;
+                return nullptr;
+            } else {
+                SubTree *front = this->first;
+                this->first = front->next;
+                --size;
+                return this->first;
+            }
+        }
+
+        inline bool empty() const {
+            return this->size == 0;
+        }
+    };
+}
 
 namespace BN {
     struct QueueTree {

@@ -1,6 +1,8 @@
 #define BN_ALGO
 #define IG_MDA
 
+//#define PRINT_ALL_TREES
+
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -10,6 +12,8 @@
 #include "preprocessing/includes/Preprocessor.h"
 #include "search/includes/MultiPrim.h"
 #include "search/includes/BN.h"
+
+#include "search/includes/Solution.h"
 
 //#include "valgrind/callgrind.h"
 #include <boost/asio/ip/host_name.hpp>
@@ -22,7 +26,6 @@ int main(int argc, char *argv[]) {
     std::stringstream name;
     std::vector<std::string> splittedName = split(argv[1], '/');
 //    name << splittedName[splittedName.size()-5] << ";" << splittedName[splittedName.size()-4];
-    name << "SANTOS;";
 //    name << splittedName.end()[-5];
 //    name <<  ";";
 //    name << splittedName.end()[-4];
@@ -33,8 +36,6 @@ int main(int argc, char *argv[]) {
     FILE* logCollectionFile;
     logCollectionFile = fopen("logs.txt", "a");
 
-    //std::stringstream outputStream;
-
 #ifdef IG_MDA
     {
         EdgeSorter edgeComparator{standardSorting()};
@@ -42,11 +43,14 @@ int main(int argc, char *argv[]) {
         Graph& G = *G_ptr;
         Preprocessor preprocessor;
         GraphCompacter contractedGraph = preprocessor.run(G);
-        NEW_GENERATION::IGMDA biSearch(contractedGraph.compactGraph);
+        IGMDA biSearch(contractedGraph.compactGraph);
         std::clock_t c_start = std::clock();
-        Solution solution = biSearch.run(contractedGraph);
+        Solution solution = biSearch.run();
         std::clock_t c_end = std::clock();
         std::time_t end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+#ifdef PRINT_ALL_TREES
+        solution.printSpanningTrees(contractedGraph);
+#endif
         char resultsBuffer[350];
         sprintf(resultsBuffer, "IG-MDA;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
                 DIM, graphName.c_str(), G.nodesCount, G.arcsCount,
@@ -74,6 +78,9 @@ int main(int argc, char *argv[]) {
     std::clock_t c_start_bn = std::clock();
     Solution bnSolution = bnSearch.run();
     std::clock_t c_end_bn = std::clock();
+#ifdef PRINT_ALL_TREES
+    bnSolution.printSpanningTrees(contractedGraph);
+#endif
     //bnSearch.printParetoFront(*contractedGraph.connectedComponents);
 
     char bnResultsBuffer [350];

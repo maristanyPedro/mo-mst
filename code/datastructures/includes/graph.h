@@ -21,9 +21,7 @@ struct Arc {
 
     void print() const;
 
-    //Node tail{INVALID_NODE};
     CostArray c;
-    CostType cSum{MAX_COST};
     Node n{INVALID_NODE};
     EdgeId idInEdgesVector{0};
     bool redArc{false};

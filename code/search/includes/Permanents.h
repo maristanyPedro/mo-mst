@@ -25,14 +25,17 @@ public:
             elements(1)
     {}
 
-    inline void addElement(size_t predIndex, EdgeId predArcId) {
+    inline PermanentTree* addElement(size_t predIndex, EdgeId predArcId) {
         assert(currentIndex < labelsPerRow);
         if (currentIndex < labelsPerRow) {
-            elements.back()[currentIndex].predLabelPosition = predIndex;
+            PermanentTree& newElement{elements.back()[currentIndex]};
+            newElement.predLabelPosition = predIndex;
 //            elements.back()[currentIndex].predSubset = pS;
-            elements.back()[currentIndex].lastArc = predArcId;
+            newElement.lastArc = predArcId;
             this->increaseIndex();
+            return &newElement;
         }
+        return nullptr;
     }
 
     inline size_t getCurrentIndex() const {
@@ -53,7 +56,7 @@ public:
 private:
     void increaseIndex() {
         if (currentIndex + 1 == labelsPerRow) {
-            this->elements.emplace_back(std::array<PermanentTree, labelsPerRow>());
+            this->elements.emplace_back();
             currentIndex = 0;
         }
         else {

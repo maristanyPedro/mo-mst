@@ -34,4 +34,4 @@ set(execName "BN_AND_IGMDA_${CMAKE_BUILD_TYPE}.o")
 			search/includes/BN.h
 			search/src/BN.cpp
 			m_mst.cpp
-			datastructures/includes/typedefs.h datastructures/includes/Label.h datastructures/includes/BinaryHeap.h search/includes/ImplicitNode.h search/src/ImplicitNode.cpp)
+			datastructures/includes/typedefs.h datastructures/includes/Label.h datastructures/includes/BinaryHeap.h search/includes/ImplicitNode.h search/src/ImplicitNode.cpp search/src/Solution.cpp)

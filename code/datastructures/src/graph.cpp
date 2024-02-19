@@ -44,12 +44,7 @@ void Graph::DFS_blue(const Node startNode, ConnectedComponent& reachedNodes) con
 }
 
 Arc::Arc(Node n, const CostArray& c, EdgeId edgeId):
-        c{c}, n{n}, idInEdgesVector{edgeId} {
-    cSum = 0;
-    for (size_t i = 0; i < DIM; ++i) {
-        cSum += c[i];
-    }
-}
+        c{c}, n{n}, idInEdgesVector{edgeId} {}
 
 void Arc::print() const {
     printf("Arc costs: (%d, %d)\n", c[0], c[1]);

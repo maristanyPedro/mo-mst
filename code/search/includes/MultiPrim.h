@@ -14,21 +14,19 @@
 
 class Graph;
 
-template <typename Data = SubTree>
+
+template <typename Data = MultiPrim::SubTree>
         struct Pool;
 
-template<typename LabelType=SubTree, typename Comparator=CandidateLexComp>
+template<typename LabelType=MultiPrim::SubTree, typename Comparator=MultiPrim::CandidateLexComp>
         class BinaryHeap;
 class Preprocessor;
 
-namespace NEW_GENERATION {
-
-    class IGMDA {
-    typedef ImplicitNode<SubTree> TransitionNode;
+class IGMDA {
+    typedef ImplicitNode<MultiPrim::SubTree> TransitionNode;
     public:
         explicit IGMDA(const Graph& G);
-        Solution run(const GraphCompacter& compactGraph);
-        void printParetoFront(const ConnectedComponents& blueArcsComponents) const;
+        Solution run();
 
     private:
         TransitionNode& getTransitionNode(const TransitionNode& predSubset, Node newNode, long unsigned decimalRepresentatio);
@@ -39,15 +37,13 @@ namespace NEW_GENERATION {
                 const TransitionNode& predSubset,
                 Node newNode);
 
-        void nextQueueTree(const SubTree* recentlyExtracted, BinaryHeap<SubTree, CandidateLexComp>& heap, Pool<SubTree>& treesPool);
+        void nextQueueTree(const MultiPrim::SubTree* recentlyExtracted, BinaryHeap<MultiPrim::SubTree, MultiPrim::CandidateLexComp>& heap, Pool<MultiPrim::SubTree>& treesPool);
 
-        bool propagate(const SubTree* predLabel, const TransitionNode& searchNode, BinaryHeap<SubTree, CandidateLexComp>& H, Pool<SubTree>& treesPool);
-
-        static void printSpanningTrees(const std::list<SubTree*>& solutions, const Permanents& permanents, const Graph& G, const GraphCompacter& compactGraph);
+        bool propagate(const MultiPrim::SubTree* predLabel, const TransitionNode& searchNode, BinaryHeap<MultiPrim::SubTree, MultiPrim::CandidateLexComp>& H, Pool<MultiPrim::SubTree>& treesPool);
 
         inline bool pruned(const CostArray& c);
 
-        void storeStatistics(Solution& sol, std::list<SubTree*>& solutions) const;
+        void storeStatistics(Solution& sol);
 
         size_t countTransitionNodes() const;
 
@@ -55,7 +51,7 @@ namespace NEW_GENERATION {
 
     private:
         const Graph& graph;
-        Permanents permanentTrees;
+        std::unique_ptr<Permanents> permanentTrees;
         std::unordered_map<long unsigned, TruncatedFront> truncated;
         std::vector<std::unique_ptr<TransitionNode>> implicitNodes;
         const CostArray dominanceBound;
@@ -67,12 +63,5 @@ namespace NEW_GENERATION {
         size_t transitionArcs{0};
         size_t skipCounter{0};
     };
-
-    bool IGMDA::pruned(const CostArray& c)  {
-        //return weakDominates(this->dominanceBound, c) || truncatedDominance(this->truncated[targetNode], c);
-        return truncatedDominance(this->truncated[targetNode], c);
-        //return false;
-    }
-}
 
 #endif

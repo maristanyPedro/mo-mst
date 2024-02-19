@@ -17,7 +17,7 @@ typedef std::vector<OutgoingArcInfo> OutgoingArcs;
 struct PredArc {
     PredArc() = default;
 
-    mutable List nextQueueTrees;
+    mutable MultiPrim::List nextQueueTrees;
 };
 
 template <typename LabelType>

@@ -30,6 +30,8 @@ namespace BN {
         void printParetoFront(const std::list<QueueTree*>& targetFront, const ConnectedComponents &blueArcsComponents) const;
 
     private:
+        EdgeId retrieveEdgeId(const QueueTree* efficientTree) const;
+
         TransitionNode &getSubset(const TransitionNode &predSubset, Node newNode);
 
         TransitionNode &intializeSubset(
@@ -47,15 +49,13 @@ namespace BN {
 
         bool propagate(QueueTree* efficientTree, const TransitionNode &transitionNode, BinaryHeap<QueueTree, BN::CandidateLexComp> &H);
 
-        void printSpanningTrees(const std::list<QueueTree*>& targetFront) const;
-
         inline bool pruned(const CostArray &c) const;
 
         bool merge(OpenCosts& open, QueueTree* newLabel);
 
         void clean(OpenCosts& open, QueueTree* newLabel);
 
-        void storeStatistics(Solution &sol, size_t solutionsCount) const;
+        void storeStatistics(Solution &sol);
 
         size_t countTransitionNodes() const;
 
@@ -66,9 +66,7 @@ namespace BN {
         Pool<QueueTree> treePool;
         std::vector<std::unique_ptr<TransitionNode>> implicitNodes;
         std::unordered_map<long unsigned, TruncatedFront> truncated;
-        Permanents permanentTrees;
-        //std::vector<Front> permanentTrees;
-        //std::unordered_map<long unsigned, std::unique_ptr<ImplicitNode>> test;
+        std::unique_ptr<Permanents> permanentTrees;
         const CostArray dominanceBound;
         const size_t targetNode;
         size_t extractions;

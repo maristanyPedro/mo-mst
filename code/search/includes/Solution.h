@@ -1,10 +1,16 @@
 #ifndef SOLUTION_H_
 #define SOLUTION_H_
 
-#include <cstddef>
+#include <vector>
+#include <list>
+#include "./Permanents.h"
+
+class GraphCompacter;
+
 
 struct Solution {
     Solution():
+        permanents(std::make_unique<Permanents>()),
         trees{1},
         extractions{0},
         insertions{0},
@@ -13,6 +19,12 @@ struct Solution {
         transitionNodes{0},
         transitionArcs{0},
         time{0} {}
+
+    void printSpanningTrees(const GraphCompacter& compactGraph);
+
+
+    std::vector<size_t> spanningTreeIndices;
+    std::unique_ptr<Permanents> permanents;
 
     std::size_t trees{0};
     std::size_t extractions{0};
@@ -23,5 +35,6 @@ struct Solution {
     std::size_t transitionArcs{0};
     double time{0};
 };
+
 
 #endif
