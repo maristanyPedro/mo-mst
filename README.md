@@ -35,7 +35,7 @@ MultiPrim;3DIM;SANTOS;;;3_a_9_90_2.tree;9;33;2;7;0.000025;0.000912;0.000000;272;
 MultiBN;3DIM;SANTOS;;;3_a_9_90_2.tree;9;33;2;7;0.000025;0.002310;0.002000;272;2079;0;0;64;0;opt-008549;Tue Apr 18 16:13:32 2023
 ```
 
-Each line's entries are explained in the file code/m_mst.cpp. The three floats are the preprocessing time, the wall time, and the cpu time used by the corresponding algorithm. Right after these three floats the output lines indicate the cardinality of the solution sets. In this case 272 spanning trees were computed. If you want to see the actual solution trees, go to code/search/src/MultiPrim.cpp and uncomment Line 129. Then, recompile the project and run the new executable as before. The program will print all efficient trees calculated by the IG-MDA.
+Each line's entries are explained in the file code/m_mst.cpp. The three floats are the preprocessing time, the wall time, and the cpu time used by the corresponding algorithm. Right after these three floats the output lines indicate the cardinality of the solution sets. In this case 272 spanning trees were computed. If you want to see the actual solution trees printed, uncomment Line 4 in the file m_mst.cpp. This will activate the macro PRINT_ALL_TREES. After recompiling and rerunning the code, every active algorithm (you can choose which algorithms to run by activating/deactivating the corrresponding macros in Line 1 and Line 2 of the m_mst.cpp file) will print its solutions after its execution.
 
 ## Graph files
 
