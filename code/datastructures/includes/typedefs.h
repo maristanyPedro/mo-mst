@@ -21,7 +21,7 @@
 
 typedef uint32_t Node;
 typedef uint16_t NeighborhoodSize;
-typedef uint32_t ArcId;
+typedef uint32_t EdgeId;
 typedef uint32_t CostType;
 
 typedef uint32_t CostType;
@@ -31,7 +31,7 @@ constexpr Dimension DIM = 3;
 
 constexpr Node INVALID_NODE = std::numeric_limits<Node>::max();
 constexpr NeighborhoodSize MAX_DEGREE = std::numeric_limits<NeighborhoodSize>::max();
-constexpr ArcId INVALID_ARC = std::numeric_limits<ArcId>::max();
+constexpr EdgeId INVALID_ARC = std::numeric_limits<EdgeId>::max();
 constexpr CostType MAX_COST = std::numeric_limits<CostType>::max();
 constexpr uint16_t MAX_PATH = std::numeric_limits<uint16_t>::max();
 typedef boost::dynamic_bitset<> NodesSubset;

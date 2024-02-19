@@ -44,7 +44,7 @@ void GraphCompacter::buildCompactGraph() {
     //Now, we iterate over all edges in the original graph. Every edge that connects two distinct
     //connected components is added to the compact graph. The new copy links the two connected components
     //that contain the original nodes connected by the original edge.
-    ArcId addedEdges{0};
+    EdgeId addedEdges{0};
     for (const Edge& edge: this->originalGraph.edges) {
         if (edge.isRed) {
             continue;
@@ -67,7 +67,7 @@ void GraphCompacter::buildCompactGraph() {
 //           this->compactGraph.nodesCount, this->compactGraph.arcsCount);
 }
 
-ArcId GraphCompacter::getOriginalId(const Edge &edgeinCompactGraph) const {
+EdgeId GraphCompacter::getOriginalId(const Edge &edgeinCompactGraph) const {
     return this->compactEdgeIds2OriginalEdgeIds.at(edgeinCompactGraph.id);
 }
 

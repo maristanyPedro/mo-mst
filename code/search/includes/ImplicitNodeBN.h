@@ -54,7 +54,7 @@ ImplicitNodeBN<LabelType>::ImplicitNodeBN(boost::dynamic_bitset<> nodes, long un
         index{index},
         cardinality{this->containedNodes.count()} {
     //std::cout << "Constructor for growing tree: " << containedNodes << std::endl;
-//    for (ArcId aId : this->outgoingArcs()) {
+//    for (EdgeId aId : this->outgoingArcs()) {
 //        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
@@ -67,7 +67,7 @@ ImplicitNodeBN<LabelType>::ImplicitNodeBN(const Graph &originalGraph, Node initi
         index{this->computeIndex()},
         cardinality{1} {
 //    std::cout << "Constructor for initial node: " << containedNodes << std::endl;
-//    for (ArcId aId : this->outgoingArcs()) {
+//    for (EdgeId aId : this->outgoingArcs()) {
 //        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }

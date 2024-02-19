@@ -37,13 +37,12 @@ namespace BN {
                 long unsigned decimalRepresentation);
 
         bool buildAndAnalyze(
-                QueueTree* predLabel,
-                const TransitionNode& searchNode,
+                QueueTree* efficientSubtree,
+                const TransitionNode& transitionNodeForEfficientSubtree,
                 BinaryHeap<QueueTree, BN::CandidateLexComp>& H,
                 Node lastTail,
-                const Arc& edge,
-                ArcId lastAddedEdgeId,
-                //std::pair<Node, Node>& orientedArc,
+                const Arc& cutArc,
+                NeighborhoodSize cutArcPosition,
                 Node newTreeNode);
 
         bool propagate(QueueTree* efficientTree, const TransitionNode &transitionNode, BinaryHeap<QueueTree, BN::CandidateLexComp> &H);
@@ -80,5 +79,11 @@ namespace BN {
     bool MultiobjectiveSearch::pruned(const CostArray& c) const {
         return weakDominates(this->dominanceBound, c);// || isDominated(this->permanentTrees.at(targetNode), c);
     }
+
+    struct ArcSorter {
+        inline bool operator() (const Arc& lhs, const Arc& rhs) const {
+            return lhs.n < rhs.n;
+        }
+    };
 }
 #endif

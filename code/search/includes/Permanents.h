@@ -11,12 +11,12 @@ constexpr uint16_t labelsPerRow = 1000;
 struct PermanentTree {
     PermanentTree() = default;
 
-    PermanentTree(size_t pLp, ArcId la):
+    PermanentTree(size_t pLp, EdgeId la):
         predLabelPosition{pLp}, lastArc{la} {}
 
     //long unsigned predSubset{std::numeric_limits<long unsigned>::max()};
     size_t predLabelPosition{std::numeric_limits<size_t>::max()};
-    ArcId lastArc{std::numeric_limits<uint32_t>::max()};
+    EdgeId lastArc{std::numeric_limits<uint32_t>::max()};
 };
 
 class Permanents {
@@ -25,7 +25,7 @@ public:
             elements(1)
     {}
 
-    inline void addElement(size_t predIndex, ArcId predArcId) {
+    inline void addElement(size_t predIndex, EdgeId predArcId) {
         assert(currentIndex < labelsPerRow);
         if (currentIndex < labelsPerRow) {
             elements.back()[currentIndex].predLabelPosition = predIndex;

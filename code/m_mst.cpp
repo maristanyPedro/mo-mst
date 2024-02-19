@@ -16,27 +16,30 @@
 
 int main(int argc, char *argv[]) {
     (void) argc;
-    std::unique_ptr<Graph> G_ptr = setupGraph(argv[1]);
-    Graph& G = *G_ptr;
+
     const auto host_name = boost::asio::ip::host_name();
 
     std::stringstream name;
     std::vector<std::string> splittedName = split(argv[1], '/');
 //    name << splittedName[splittedName.size()-5] << ";" << splittedName[splittedName.size()-4];
     name << "SANTOS;";
-    name << splittedName.end()[-5];
-    name <<  ";";
-    name << splittedName.end()[-4];
-    name <<  ";";
+//    name << splittedName.end()[-5];
+//    name <<  ";";
+//    name << splittedName.end()[-4];
+//    name <<  ";";
     name << splittedName.back();
     const std::string graphName{name.str()};
 
     FILE* logCollectionFile;
     logCollectionFile = fopen("logs.txt", "a");
-    std::stringstream outputStream;
+
+    //std::stringstream outputStream;
 
 #ifdef IG_MDA
     {
+        EdgeSorter edgeComparator{standardSorting()};
+        std::unique_ptr<Graph> G_ptr = setupGraph(argv[1], edgeComparator);
+        Graph& G = *G_ptr;
         Preprocessor preprocessor;
         GraphCompacter contractedGraph = preprocessor.run(G);
         NEW_GENERATION::IGMDA biSearch(contractedGraph.compactGraph);
@@ -60,22 +63,12 @@ int main(int argc, char *argv[]) {
 
 #ifdef BN_ALGO
     EdgeSorterBN sorter;
-    std::sort(G.edges.begin(), G.edges.end(), sorter);
-    for (size_t edgeId = 0; edgeId < G.edges.size(); ++edgeId) {
-        Edge &doubleEndedArc{G.edges[edgeId]};
-        assert(doubleEndedArc.id == INVALID_ARC);
-        doubleEndedArc.id = edgeId;
-    }
-    ArcSorterBN arcSorter;
-    for (Node n = 0; n < G.nodesCount; ++n) {
-        NodeAdjacency& neighborhood = G.node(n);
-        std::sort(neighborhood.adjacentArcs.begin(), neighborhood.adjacentArcs.end(), arcSorter);
-        for (size_t id = 0; id < neighborhood.adjacentArcs.size(); ++id) {
-            neighborhood.adjacentArcs[id].idInArcVector = id;
-        }
-    }
+    std::unique_ptr<Graph> G_ptr = setupGraph(argv[1], sorter);
+    Graph& G = *G_ptr;
     Preprocessor preprocessor;
     GraphCompacter contractedGraph = preprocessor.run(G);
+    BN::ArcSorter arcSorter;
+    sortArcs(contractedGraph.compactGraph, arcSorter);
 
     BN::MultiobjectiveSearch bnSearch(contractedGraph.compactGraph);
     std::clock_t c_start_bn = std::clock();

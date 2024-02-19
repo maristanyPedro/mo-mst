@@ -16,18 +16,18 @@ void DFS::runRed() {
     this->searchRed(source);
     if (this->visited[relevantArc.n]) {
         relevantArc.redArc = true;
-        this->G.edges[relevantArc.idInArcVector].isRed = true;
+        this->G.edges[relevantArc.idInEdgesVector].isRed = true;
     }
 }
 
 void DFS::searchRed(const Node startNode) {
-    ArcId relevantArcId = this->relevantArc.idInArcVector;
+    EdgeId relevantArcId = this->relevantArc.idInEdgesVector;
     visited[startNode] = true;
     if (startNode != relevantArc.n) {
         const Neighborhood& arcs{G.adjacentArcs(startNode)};
         for (const Arc& a : arcs) {
-            const Edge& edge = this->G.edges[a.idInArcVector];
-            if (edge.isRed || a.idInArcVector == relevantArcId || visited[a.n]) {
+            const Edge& edge = this->G.edges[a.idInEdgesVector];
+            if (edge.isRed || a.idInEdgesVector == relevantArcId || visited[a.n]) {
                 continue;
             }
 //            if (a.c[0] <= relevantArc.c[0] && a.c[1] <= relevantArc.c[1]) {
@@ -42,17 +42,17 @@ void DFS::runBlue() {
     this->searchBlue(source);
     if (!this->visited[relevantArc.n]) {
         relevantArc.blueArc = true;
-        this->G.edges[relevantArc.idInArcVector].isBlue = true;
+        this->G.edges[relevantArc.idInEdgesVector].isBlue = true;
     }
 }
 
 void DFS::searchBlue(const Node startNode) {
-    ArcId relevantArcId = this->relevantArc.idInArcVector;
+    EdgeId relevantArcId = this->relevantArc.idInEdgesVector;
     visited[startNode] = true;
     if (startNode != relevantArc.n) {
         const Neighborhood& arcs{G.adjacentArcs(startNode)};
         for (const Arc& a : arcs) {
-            if (a.idInArcVector == relevantArcId || visited[a.n]) {
+            if (a.idInEdgesVector == relevantArcId || visited[a.n]) {
                 continue;
             }
 //            if (!(relevantArc.c[0] <= a.c[0] && relevantArc.c[1] <= a.c[1]) || a.blueArc) {
@@ -70,10 +70,10 @@ size_t findRedArcs(Graph& G) {
         Neighborhood& arcs = G.adjacentArcs(u);
         for (Arc& a : arcs) {
             //assert(a.n == u);
-            if (processed[a.idInArcVector]) {
+            if (processed[a.idInEdgesVector]) {
                 continue;
             }
-            processed[a.idInArcVector] = true;
+            processed[a.idInEdgesVector] = true;
             DFS dfs(G, u, a);
             dfs.runRed();
             if (a.redArc) {
@@ -85,7 +85,7 @@ size_t findRedArcs(Graph& G) {
     for (Node u = 0; u < G.nodesCount; u++) {
         Neighborhood& arcs = G.adjacentArcs(u);
         for (Arc& a : arcs) {
-            const Edge& e = G.edges[a.idInArcVector];
+            const Edge& e = G.edges[a.idInEdgesVector];
             if (e.isRed && !a.redArc) {
                 a.redArc = true;
                 ++redArcsOppositeDirection;
@@ -103,10 +103,10 @@ size_t findBlueArcs(Graph& G) {
         Neighborhood& arcs = G.adjacentArcs(u);
         for (Arc& a : arcs) {
             //assert(a.n == u);
-            if (processed[a.idInArcVector]) {
+            if (processed[a.idInEdgesVector]) {
                 continue;
             }
-            processed[a.idInArcVector] = true;
+            processed[a.idInEdgesVector] = true;
             DFS dfs(G, u, a);
             dfs.runBlue();
             if (a.blueArc) {

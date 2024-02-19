@@ -214,7 +214,7 @@ bool IGMDA::propagate(const SubTree* predLabel, const TransitionNode& searchNode
         if (outgoingArcInfo.chenPruned || outgoingArcInfo.cutExitPruned) {
             continue;
         }
-        ArcId aId = outgoingArcInfo.edgeId;
+        EdgeId aId = outgoingArcInfo.edgeId;
         const Edge& edge{this->graph.edges[aId]};
         assert(aId == edge.id);
         //printf("\t\tAnalyzing outgoing edge %u --> %u c = (%u,%u,%u) id: %u\n", edge.tail, edge.head, edge.c[0], edge.c[1], edge.c[2], aId);
@@ -330,7 +330,7 @@ void IGMDA::printSpanningTrees(const std::list<SubTree*>& solutions, const Perma
             assert(currentCosts[d] == 0);
         }
         for (const auto& connectedComponent: *compactGraph.connectedComponents) {
-            for (ArcId edgeId : connectedComponent.edgeIds) {
+            for (EdgeId edgeId : connectedComponent.edgeIds) {
                 const Edge& edgeInOriginalGraph{compactGraph.originalGraph.edges[edgeId]};
                 edgeInOriginalGraph.print();
                 ++printedEdges;

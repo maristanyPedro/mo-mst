@@ -57,7 +57,7 @@ public:
 
     inline const PredArc& addIncomingArc();
 
-    inline const PredArc& getIncomingArc(ArcId id);
+    inline const PredArc& getIncomingArc(EdgeId id);
 
     inline LabelType* getQueueTree() {
         return this->queueTree;
@@ -104,7 +104,7 @@ ImplicitNode<LabelType>::ImplicitNode(const Graph& originalGraph, boost::dynamic
         queueTree{nullptr},
         cardinality{this->containedNodes.count()} {
     //std::cout << "Constructor for growing tree: " << containedNodes << std::endl;
-//    for (ArcId aId : this->outgoingArcs()) {
+//    for (EdgeId aId : this->outgoingArcs()) {
 //        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
@@ -119,7 +119,7 @@ ImplicitNode<LabelType>::ImplicitNode(const Graph &originalGraph, Node initialNo
         queueTree{nullptr},
         cardinality{1} {
 //    std::cout << "Constructor for initial node: " << containedNodes << std::endl;
-//    for (ArcId aId : this->outgoingArcs()) {
+//    for (EdgeId aId : this->outgoingArcs()) {
 //        const Edge& arc = graph.edges[aId];
 //        arc.print();
 //    }
@@ -138,7 +138,7 @@ inline const PredArc& ImplicitNode<LabelType>::addIncomingArc() {
 }
 
 template <typename LabelType>
-inline const PredArc& ImplicitNode<LabelType>::getIncomingArc(ArcId id) {
+inline const PredArc& ImplicitNode<LabelType>::getIncomingArc(EdgeId id) {
     assert(id < this->incomingArcs.size());
     return this->incomingArcs[id];
 }
@@ -172,7 +172,7 @@ const NodesSubset& ImplicitNode<LabelType>::getNodes() const {
 template <typename LabelType>
 void ImplicitNode<LabelType>::chenPruning(const Graph& G, OutgoingArcs& outgoingArcs) {
     for (size_t i = 0; i < outgoingArcs.size(); ++i) {
-        const ArcId edgeId = outgoingArcs[i].edgeId;
+        const EdgeId edgeId = outgoingArcs[i].edgeId;
         const Edge& edge = G.edges[edgeId];
         for (size_t j = 0; j < i; ++j) {
             if (dominates(G.edges[outgoingArcs[j].edgeId].c, edge.c)) {
@@ -207,12 +207,12 @@ std::unique_ptr<OutgoingArcs> ImplicitNode<LabelType>::computeOutgoingArcsNew(
     //Now, add the adjacent edges from the newNode that do not end at a node contained in the old tree.
     const Neighborhood& neighborhood{G.node(newNode).adjacentArcs};
     for (const Arc& arc : neighborhood) {
-        const Edge& edge = G.edges[arc.idInArcVector];
+        const Edge& edge = G.edges[arc.idInEdgesVector];
         if (edge.isRed) {
             continue;
         }
         if (!this->containedNodes[arc.n]) {
-            result->push_back(OutgoingArcInfo(arc.idInArcVector, false, false));
+            result->push_back(OutgoingArcInfo(arc.idInEdgesVector, false, false));
         }
     }
     std::sort(result->begin(), result->end(), OutgoingArcSorter(G));
@@ -228,7 +228,7 @@ std::unique_ptr<OutgoingArcs> ImplicitNode<LabelType>::computeOutgoingArcs(const
         if (arc.redArc) {
             continue;
         }
-        result->push_back(OutgoingArcInfo(arc.idInArcVector, false, false));
+        result->push_back(OutgoingArcInfo(arc.idInEdgesVector, false, false));
     }
     std::sort(result->begin(), result->end(), OutgoingArcSorter(G));
     chenPruning(G, *result);

@@ -28,7 +28,7 @@ struct SubTree{
         assert(!inQueue);
     }
 
-    inline void update(Node nNew, const CostArray& cNew, ArcId la, ArcId lastEdgeId, size_t plp) {
+    inline void update(Node nNew, const CostArray& cNew, EdgeId la, EdgeId lastEdgeId, size_t plp) {
         this->n = nNew;
         this->c = cNew;
         this->lastTransitionArc = la;
@@ -44,8 +44,8 @@ struct SubTree{
 
     CostArray c{generate(MAX_COST)};
     size_t predLabelPosition{std::numeric_limits<size_t>::max()};
-    ArcId lastTransitionArc{std::numeric_limits<uint32_t>::max()};
-    ArcId lastEdgeId{std::numeric_limits<uint32_t>::max()};
+    EdgeId lastTransitionArc{std::numeric_limits<uint32_t>::max()};
+    EdgeId lastEdgeId{std::numeric_limits<uint32_t>::max()};
     long unsigned n{INVALID_NODE};
     uint32_t priority{std::numeric_limits<uint32_t>::max()}; ///< for heap operations.
     SubTree* next{nullptr};
@@ -135,7 +135,7 @@ namespace BN {
                 c{c}, n{n} {}
 
         void print() const {
-            printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastArcId);
+            printf("%lu c=(%u, %u) lastTransitionArc=%d\n", n, c[0], c[1], lastEdgeId);
         }
 
         CostArray c{generate(MAX_COST)};
@@ -144,7 +144,7 @@ namespace BN {
         long unsigned predSubset{std::numeric_limits<long unsigned>::max()};
         Node lastTail{0};
         Node lastHead{0};
-        ArcId lastArcId{std::numeric_limits<ArcId>::max()};
+        NeighborhoodSize lastEdgeId{std::numeric_limits<NeighborhoodSize>::max()};
         size_t predLabelPosition{std::numeric_limits<size_t>::max()};
         long unsigned n{INVALID_NODE};
         uint32_t priority{std::numeric_limits<uint32_t>::max()}; ///< for heap operations.
@@ -156,10 +156,10 @@ namespace BN {
         PermanentQueueTree() = default;
 
         PermanentQueueTree(const QueueTree* qt) :
-                predSubset{qt->predSubset}, lastArc{qt->lastArcId}, predLabelPosition{qt->predLabelPosition} {}
+                predSubset{qt->predSubset}, lastArc{qt->lastEdgeId}, predLabelPosition{qt->predLabelPosition} {}
 
         long unsigned predSubset{std::numeric_limits<long unsigned>::max()};
-        ArcId lastArc{std::numeric_limits<ArcId>::max()};
+        EdgeId lastArc{std::numeric_limits<EdgeId>::max()};
         size_t predLabelPosition{std::numeric_limits<size_t>::max()};
     };
 

@@ -1,5 +1,5 @@
 #include <cassert>
-#include <fstream>
+
 #include <iterator>
 #include <limits>
 #include <sstream>
@@ -9,84 +9,6 @@
 #include "../includes/graph.h"
 
 using namespace std;
-
-unique_ptr<Graph> setupGraph(const string& filename, const GenericEdgeSorter& edgeSorter) {
-    ifstream infile(filename);
-    string line;
-    size_t nodesCount =0, arcsCount = 0;
-    Dimension dimension{0};
-    //Parse file until information about number of nodes and number of edges is reached.
-    while (getline(infile, line)) {
-        vector<string> splittedLine{split(line, ' ')};
-        if (splittedLine[0] == "mmst") {
-            assert(splittedLine.size() >= 4);
-            nodesCount = stoi(splittedLine[1]);
-            arcsCount = stoi(splittedLine[2]);
-            dimension = stoi(splittedLine[3]);
-            if (dimension != DIM) {
-                std::printf("ERROR Program compiled for %u dimensions but input file contains %u dimensional costs!\n",
-                            DIM, dimension);
-                exit(1);
-            }
-            break;
-        }
-    }
-    if (nodesCount == 0 || arcsCount == 0) {
-        printf("Could not determine the size of the graph %s. Abort.\n", filename.c_str());
-        exit(1);
-    }
-    std::vector<NeighborhoodSize> degree(nodesCount, 0);
-    std::vector<bool> foundNodes(nodesCount, false);
-    std::vector<Edge> edges;
-    size_t addedEdges = 0;
-    while (getline(infile, line)) {
-        //printf("%s\n", line.c_str());
-        vector<string> splittedLine{split(line, ' ')};
-        if (splittedLine[0] == "e") {
-            assert(splittedLine.size() == 3 + DIM);
-            Node tailId;
-            std::stringstream(splittedLine[1]) >> tailId;
-            Node headId;
-            std::stringstream(splittedLine[2]) >> headId;
-            foundNodes[tailId] = true;
-            foundNodes[headId] = true;
-            ++degree[tailId];
-            ++degree[headId];
-            assert(degree[tailId] != MAX_DEGREE);
-            assert(degree[headId] != MAX_DEGREE);
-            CostArray arcCosts;
-            for (size_t i = 0; i < dimension; ++i) {
-                arcCosts[i] = stoi(splittedLine[3+i]);
-            }
-            edges.emplace_back(INVALID_ARC, tailId, headId, arcCosts);
-            ++addedEdges;
-        }
-    }
-    assert(addedEdges == arcsCount);
-    unique_ptr<Graph> G = make_unique<Graph>(nodesCount, arcsCount);
-    std::sort(edges.begin(), edges.end(), EdgeSorter(standardSorting()));
-    G->edges = std::move(edges);
-    for (Node i = 0; i < nodesCount; ++i) {
-        G->setNodeInfo(i);
-    }
-    vector<NeighborhoodSize> degreePerNode(nodesCount, 0);
-    //printf("Added %lu edges. Want to build graph now!\n", edges.size());
-    for (size_t aId = 0; aId < G->edges.size(); ++aId) {
-        Edge& doubleEndedArc{G->edges[aId]};
-        assert(doubleEndedArc.id == INVALID_ARC);
-        doubleEndedArc.id = aId;
-
-        NodeAdjacency& tail = G->node(doubleEndedArc.tail);
-        NodeAdjacency& head = G->node(doubleEndedArc.head);
-        tail.id = doubleEndedArc.tail;
-        head.id = doubleEndedArc.head;
-
-        tail.adjacentArcs.emplace_back(head.id, doubleEndedArc.c, aId);
-        head.adjacentArcs.emplace_back(tail.id, doubleEndedArc.c, aId);
-    }
-    //printf("Graph built!\n");
-    return G;
-}
 
 void Graph::setNodeInfo(Node n) {
     NodeAdjacency& currentNode = this->nodes[n];
@@ -111,18 +33,18 @@ void Graph::DFS_blue(const Node startNode, ConnectedComponent& reachedNodes) con
     reachedNodes.component.insert(startNode);
     const Neighborhood& arcs{this->adjacentArcs(startNode)};
     for (const Arc& a : arcs) {
-        const Edge& edge{this->edges[a.idInArcVector]};
+        const Edge& edge{this->edges[a.idInEdgesVector]};
         if (component.find(a.n) != component.end() || !edge.isBlue) {
             continue;
         }
-        reachedNodes.edgeIds.emplace(a.idInArcVector);
+        reachedNodes.edgeIds.emplace(a.idInEdgesVector);
         addInPlace(reachedNodes.cost, a.c);
         DFS_blue(a.n, reachedNodes);
     }
 }
 
-Arc::Arc(Node n, const CostArray& c, ArcId id):
-    c{c}, n{n}, idInArcVector{id} {
+Arc::Arc(Node n, const CostArray& c, EdgeId edgeId):
+        c{c}, n{n}, idInEdgesVector{edgeId} {
     cSum = 0;
     for (size_t i = 0; i < DIM; ++i) {
         cSum += c[i];
@@ -133,14 +55,14 @@ void Arc::print() const {
     printf("Arc costs: (%d, %d)\n", c[0], c[1]);
 }
 
-Edge::Edge(ArcId id, Node tail, Node head, const CostArray& c):
+Edge::Edge(EdgeId id, Node tail, Node head, const CostArray& c):
     id{id}, tail{tail}, head{head}, c{c} {}
 
-Graph::Graph(Node nodesCount, ArcId arcsCount):
+Graph::Graph(Node nodesCount, EdgeId arcsCount):
         nodesCount{nodesCount},
         arcsCount{arcsCount},
         nodes(nodesCount) {
-    //In case this assertion fails, just change the ArcId typedef in typedefs.h
+    //In case this assertion fails, just change the EdgeId typedef in typedefs.h
     assert(INVALID_ARC >= arcsCount);
 }
 
@@ -149,6 +71,10 @@ NodeAdjacency& Graph::addNode(Node id) {
     this->nodes.back().id = id;
     ++nodesCount;
     return nodes.back();
+}
+
+const Edge& Graph::edgeRepresentation(const Arc& a) const {
+    return this->edges[a.idInEdgesVector];
 }
 
 bool Graph::reachable(Node start, Node target, const boost::dynamic_bitset<>& forbiddenNodes) const {

@@ -14,7 +14,7 @@ public:
 
     CostArray getBlueComponentsCosts() const;
 
-    ArcId getOriginalId(const Edge& edgeinCompactGraph) const;
+    EdgeId getOriginalId(const Edge& edgeinCompactGraph) const;
 
 public:
     Graph compactGraph;
@@ -25,7 +25,7 @@ public:
     const size_t redArcs;
     const size_t blueArcs;
     std::vector<bool> edgeProcessed;
-    std::map<ArcId, ArcId> compactEdgeIds2OriginalEdgeIds;
+    std::map<EdgeId, EdgeId> compactEdgeIds2OriginalEdgeIds;
 
 private:
     void generateNodes2ComponentsLinks();
