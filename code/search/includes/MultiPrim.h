@@ -29,6 +29,9 @@ class IGMDA {
         Solution run();
 
     private:
+
+        CostArray lowerBoundToTarget(const TransitionNode& tNode);
+
         TransitionNode& getTransitionNode(const TransitionNode& predSubset, Node newNode, long unsigned decimalRepresentatio);
 
         TransitionNode& initTransitionNode(

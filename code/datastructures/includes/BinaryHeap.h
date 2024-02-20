@@ -51,14 +51,6 @@ public:
         lastElementIndex++;
         up(temp);
         val->inQueue = true;
-        size_t nodeElements = 0;
-        for (auto& element : heapElements) {
-            if (element && element->inQueue) {
-                if (element->n == val->n) {
-                    ++nodeElements;
-                }
-            }
-        }
         //assert (nodeElements <= 1);
     }
 

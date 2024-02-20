@@ -6,6 +6,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <cstdio>
 
 #include "datastructures/includes/graph.h"
 #include "datastructures/includes/GraphCompacter.h"
@@ -52,7 +53,7 @@ int main(int argc, char *argv[]) {
         solution.printSpanningTrees(contractedGraph);
 #endif
         char resultsBuffer[350];
-        sprintf(resultsBuffer, "IG-MDA;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
+        snprintf(resultsBuffer, 350, "IG-MDA;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s\n",
                 DIM, graphName.c_str(), G.nodesCount, G.arcsCount,
                 contractedGraph.blueArcs, contractedGraph.redArcs,
                 preprocessor.duration, solution.time, (1000 * (c_end - c_start) / CLOCKS_PER_SEC) / 1000.,
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
 
     char bnResultsBuffer [350];
     std::time_t bn_end_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    sprintf(bnResultsBuffer, "MultiBN;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s",
+    snprintf(bnResultsBuffer, 350, "MultiBN;%uDIM;%s;%d;%d;%lu;%lu;%lf;%lf;%lf;%lu;%lu;%lu;%lu;%lu;%lu;%s;%s",
             DIM, graphName.c_str(), G.nodesCount, G.arcsCount, contractedGraph.blueArcs, contractedGraph.redArcs,
             preprocessor.duration, bnSolution.time, (1000* (c_end_bn - c_start_bn) / CLOCKS_PER_SEC)/1000.,
             bnSolution.trees, bnSolution.extractions, bnSolution.insertions, bnSolution.nqtIt, bnSolution.transitionNodes, bnSolution.transitionArcs, host_name.c_str(),

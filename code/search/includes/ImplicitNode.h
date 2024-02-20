@@ -23,8 +23,6 @@ struct PredArc {
 template <typename LabelType>
 class ImplicitNode {
     typedef std::vector<PredArc> IncomingArcs;
-//    typedef std::set<PredArc> IncomingArcs;
-//    typedef std::vector<PredArc> IncomingArcs;
 public:
     /**
      *
@@ -32,7 +30,6 @@ public:
      * @param nodes Passing by value is ok since we are moving the bitset into the 'containedNodes' member.
      */
     ImplicitNode(const Graph& originalGraph, boost::dynamic_bitset<> nodes, long unsigned index, const OutgoingArcs& existingCut, Node newNode);
-    //ImplicitNode(const Graph& graph, const ImplicitNode& predSubset, Node newNode);
 
     ImplicitNode(const Graph &originalGraph, Node initialNode);
 
@@ -102,14 +99,7 @@ ImplicitNode<LabelType>::ImplicitNode(const Graph& originalGraph, boost::dynamic
         index{index},
         outgoing(computeOutgoingArcsNew(originalGraph, existingCut, newNode)),
         queueTree{nullptr},
-        cardinality{this->containedNodes.count()} {
-    //std::cout << "Constructor for growing tree: " << containedNodes << std::endl;
-//    for (EdgeId aId : this->outgoingArcs()) {
-//        const Edge& arc = graph.edges[aId];
-//        arc.print();
-//    }
-//    std::cout << "Index: " << this->getIndex() << std::endl;
-}
+        cardinality{this->containedNodes.count()} {}
 
 template <typename LabelType>
 ImplicitNode<LabelType>::ImplicitNode(const Graph &originalGraph, Node initialNode):
@@ -117,14 +107,7 @@ ImplicitNode<LabelType>::ImplicitNode(const Graph &originalGraph, Node initialNo
         index{this->computeIndex()},
         outgoing(computeOutgoingArcs(originalGraph, initialNode)),
         queueTree{nullptr},
-        cardinality{1} {
-//    std::cout << "Constructor for initial node: " << containedNodes << std::endl;
-//    for (EdgeId aId : this->outgoingArcs()) {
-//        const Edge& arc = graph.edges[aId];
-//        arc.print();
-//    }
-//    std::cout << "Index: " << this->getIndex() << std::endl;
-}
+        cardinality{1} {}
 
 template <typename LabelType>
 bool ImplicitNode<LabelType>::initialized() const {

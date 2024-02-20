@@ -17,7 +17,7 @@ struct Arc {
     Arc() = default;
     Arc(Node n, const CostArray& c, EdgeId edgeId);
 
-    Arc& operator=(const Arc& other) = default;
+    //Arc& operator=(const Arc& other) = default;
 
     void print() const;
 
@@ -33,7 +33,7 @@ struct Edge {
     Edge() = delete;
     Edge(EdgeId id, Node tail, Node head, const CostArray& c);
 
-    Edge& operator=(const Edge& other) = default;
+    //Edge& operator=(const Edge& other) = default;
 
     void print() const;
 
